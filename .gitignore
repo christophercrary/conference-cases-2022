@@ -1,0 +1,11 @@
+# Generic.
+**/build
+
+# Python.
+**/__pycache__
+
+# FPGA.
+*.mif
+
+# MacOS.
+**/.DS_Store

@@ -1,3 +1,8 @@
+# Remove `tensorgp` directory, if it exists.
+if [ -d tensorgp ]; then
+    rm -rf tensorgp
+fi
+
 # Clone TensorGP.
 git clone https://github.com/AwardOfSky/TensorGP.git tensorgp
 cd tensorgp
