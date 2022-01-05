@@ -42,9 +42,7 @@ within the shell:
 ```
 conda env create -f environment.yml
 conda activate gp-eval-profile
-
-chmod +x ./install.sh
-./install.sh
+bash install.sh
 ```
 
 ## Profiling

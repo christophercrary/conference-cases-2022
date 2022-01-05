@@ -1,2 +1,5 @@
 # Manually install certain GP tools.
-./experiment/tools/tensorgp/install.sh
+cd ./experiment/tools/
+
+cd ./tensorgp
+bash ./install.sh

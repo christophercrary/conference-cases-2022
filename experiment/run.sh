@@ -11,4 +11,4 @@ python ./tools/gpsy/program_converter.py
 # Profile Operon.
 
 # Compute and output some relevant statistics.
-python ./tools/stats.py
+# python ./tools/stats.py

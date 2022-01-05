@@ -44,13 +44,15 @@ def initialize_terminals(dimensions, n):
     # specifying particular fitness cases.
     with open(f'{root_dir}/fitness_cases.pkl', 'rb') as f:
         fitness_cases = pickle.load(f)
+
+    print('n:', n)
     
     # Infer two-dimensional `NumPy` array from tuple of tuples.
     fitness_cases = np.array(fitness_cases)
 
     # Extract relevant variable data from the overall
     # array of fitness cases, casting this data to `float32`.
-    res = tf.cast(fitness_cases[:dimensions[n], [n]], tf.float32)
+    res = tf.cast(fitness_cases[:dimensions[0], n], tf.float32)
 
     return res
 
@@ -109,7 +111,7 @@ function_sets = {
 num_programs_per_size_bin = 1
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000, 100000)
+num_fitness_cases = (10, 100, 500,)#1000, 10000, 100000)
 
 # Overall target.
 with open(f'{root_dir}/target.pkl', 'rb') as f:
@@ -205,7 +207,8 @@ for device in devices:
             #
             # There are `num_variables` dimensions, each
             # consisting of `nfc` fitness cases.
-            target_dims = tuple(nfc for _ in range(num_variables))
+            target_dims = (nfc, num_variables)
+            #target_dims = tuple(nfc for _ in range(num_variables))
 
             # Target for given number of fitness cases.
             target = tf.cast(tf.convert_to_tensor(target_[:nfc]), tf.float32)
