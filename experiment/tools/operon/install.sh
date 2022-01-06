@@ -35,9 +35,3 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_OPENLIBM=ON -DCERES_TINY_SOLVER=ON -DU
 
 # Build custom Operon target.
 make -j operon-test
-
-cd ..
-mkdir text
-
-cp ../custom/test2.txt ./text
-cp ../custom/single_val2.csv ./data
