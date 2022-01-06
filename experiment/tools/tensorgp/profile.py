@@ -42,19 +42,19 @@ def initialize_terminals(dimensions, n):
     # a tuple of tuples, effectively a two-dimensional array,
     # with the columns specifying variables, and the rows 
     # specifying particular fitness cases.
-    with open(f'{root_dir}/fitness_cases.pkl', 'rb') as f:
-        fitness_cases = pickle.load(f)
+    with open(f'{root_dir}/inputs.pkl', 'rb') as f:
+        inputs = pickle.load(f)
 
     #print('n:', n)
     
     # Infer two-dimensional `NumPy` array from tuple of tuples.
-    fitness_cases = np.array(fitness_cases)
+    inputs = np.array(inputs)
 
-    #print('Fitness cases:', fitness_cases)
+    #print('Fitness cases:', inputs)
 
     # Extract relevant variable data from the overall
     # array of fitness cases, casting this data to `float32`.
-    res = tf.cast(fitness_cases[:dimensions[0], n], tf.float32)
+    res = tf.cast(inputs[:dimensions[0], n], tf.float32)
     #print('Res:', res)
 
     return res
@@ -245,7 +245,7 @@ for device in devices:
                 # Population relevant to the current size bin.
                 population, *_ = engine.generate_pop_from_expr(
                     programs[(i) * num_programs_per_size_bin:
-                            (i+1) * num_programs_per_size_bin])
+                             (i+1) * num_programs_per_size_bin])
 
                 for _ in range(num_epochs):
                     # For each epoch...

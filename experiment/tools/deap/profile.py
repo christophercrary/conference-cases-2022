@@ -537,7 +537,7 @@ with open(f'{root_dir}/programs.pkl', 'wb') as f:
 # contains the programs from every bin, if such a file does 
 # not already exist.
 
-print('Numbers of programs:')
+# print('Numbers of programs:')
 
 for name, (_, max_depth, bin_size) in function_sets.items():
 
@@ -550,7 +550,7 @@ for name, (_, max_depth, bin_size) in function_sets.items():
     # Number of programs per size bin.
     num_programs = [len(programs) for programs,*_ in program_dict[name]]
 
-    print(name, '=', num_programs, '\n')
+    # print(name, '=', num_programs, '\n')
 
     all_bins_are_filled = True if (min(num_programs[0:num_size_bins]) == 
         num_programs_per_size_bin) else False
@@ -570,7 +570,7 @@ for name, (_, max_depth, bin_size) in function_sets.items():
 # script, since it was seemingly not trivial to preserve 
 # the primitive sets and namespaces created by DEAP.
 
-def evaluate(primitive_set, trees, fitness_cases, target):
+def evaluate(primitive_set, trees, inputs, target):
     """Return list of fitness scores for programs.
     
     The "R-squared" function implemented by the `sklearn.metrics` 
@@ -580,8 +580,8 @@ def evaluate(primitive_set, trees, fitness_cases, target):
     primitive_set -- Primitive set, of type `PrimitiveSet`, used to 
         compile each `PrimitiveTree` object given by `trees`.
     trees -- Tuple of `PrimitiveTree` objects.
-    fitness_cases -- Tuple of fitness cases.
-    target -- Tuple of target cases.
+    inputs -- Tuple of input vectors.
+    target -- Tuple of target vectors.
     """
 
     # Fitness scores.
@@ -593,8 +593,7 @@ def evaluate(primitive_set, trees, fitness_cases, target):
         program = gp.compile(tree, primitive_set)
 
         # Calculate program outputs, i.e., estimations of target vector.
-        estimated = tuple(program(*fitness_case) 
-            for fitness_case in fitness_cases)
+        estimated = tuple(program(*input) for input in inputs)
 
         # Calculate fitness.
         fitness.append(r2_score(target, estimated))
@@ -610,13 +609,13 @@ max_num_variables = max([len(function_set)-1
 num_fitness_cases = (10, 100, 1000, 10000)
 
 # Random fitness case vector for maximum amount of fitness cases.
-fitness_cases_ = np.array(
+inputs_ = np.array(
     [[random.random() for _ in range(max_num_variables)] 
     for _ in range(max(num_fitness_cases))])
 
 # Preserve fitness cases for reference.
-with open(f'{root_dir}/fitness_cases.pkl', 'wb') as f:
-    pickle.dump(fitness_cases_, f)
+with open(f'{root_dir}/inputs.pkl', 'wb') as f:
+    pickle.dump(inputs_, f)
 
 # Random target vector for maximum amount of fitness cases.
 target_ = np.array([random.random() for _ in range(max(num_fitness_cases))])
@@ -705,7 +704,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
         print(f'Number of fitness cases: `{nfc}`')
 
         # Fitness cases relevant to function set and `nfc`.
-        fitness_cases = fitness_cases_[:nfc, :num_variables]
+        inputs = inputs_[:nfc, :num_variables]
 
         # Target relevant to `nfc`.
         target = target_[:nfc]
@@ -732,7 +731,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
                 # where each represents a raw runtime after running
                 # the relevant code `number` times.
                 runtimes = timeit.Timer(
-                    'evaluate(primitive_set, trees, fitness_cases, target)',
+                    'evaluate(primitive_set, trees, inputs, target)',
                     globals=globals()).repeat(repeat=repeat, number=number)
 
                 # Average runtimes, taking into account `number`.

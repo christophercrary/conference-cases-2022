@@ -1,4 +1,6 @@
 # Generic.
+experiment/tools/operon/operon
+experiment/tools/tensorgp/tensorgp
 **/build
 **/runs
 
