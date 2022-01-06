@@ -1,12 +1,14 @@
 import math
 import os
+import sys
 
+sys.path.append(os.path.abspath(os.path.join('./', 'gpsy')))
 from gpsy.primitive_set import PrimitiveSet
 from gpsy.node import Node
 
 
 # Useful path directory.
-root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../../results/'
+root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../results/'
             f'programs')
 
 

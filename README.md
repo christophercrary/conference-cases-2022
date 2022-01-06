@@ -17,10 +17,10 @@ is given:
 
 - [DEAP](https://github.com/DEAP/deap) - for the original paper, 
 click [here](http://vision.gel.ulaval.ca/~cgagne/pubs/deap-gecco-2012.pdf).
-- [Operon](https://github.com/heal-research/operon) - for the original paper,
-click [here](https://dl.acm.org/doi/pdf/10.1145/3377929.3398099).
 - [TensorGP](https://github.com/AwardOfSky/TensorGP) - for the original paper,
 click [here](https://cdv.dei.uc.pt/wp-content/uploads/2021/04/baeta2021tensorgp.pdf).
+- [Operon](https://github.com/heal-research/operon) - for the original paper,
+click [here](https://dl.acm.org/doi/pdf/10.1145/3377929.3398099).
 
 
 ## Installation instructions

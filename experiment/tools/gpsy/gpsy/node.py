@@ -521,7 +521,7 @@ class Node:
         """
         if not self.children:
             if self.name in primitive_set.constant_terminals:
-                return f'scalar({self.name[:5]})'
+                return f'scalar({self.name})'
             else:
                 return self.name
         else:

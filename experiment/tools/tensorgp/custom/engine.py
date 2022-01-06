@@ -752,7 +752,8 @@ class Engine:
                  initial_test_device = True,
                  previous_state = None,
                  var_func = None,
-                 read_init_pop_from_file = None):
+                 read_init_pop_from_file = None,
+                 num_variables=1):
 
         # start timers
         self.last_engine_time = time.time()
@@ -840,6 +841,8 @@ class Engine:
         #self.overall_stats_filename = 'overall_stats.csv'
         self.overall_stats_filename = "tensorgp_" + str(self.target_dims[0]) + "_" + str(self.max_tree_depth) + "_" + str(self.experiment.seed) + '.csv'
 
+        self.num_variables = num_variables
+
         if mutation_funcs is None or mutation_funcs == []:
             mut_funcs_implemented = 4
             self.mutation_funcs = [Engine.subtree_mutation, Engine.point_mutation, Engine.promotion_mutation, Engine.demotion_mutation]
@@ -884,7 +887,8 @@ class Engine:
                 self.var_func = resolve_var_node
             else:
                 self.var_func = var_func
-            self.terminal = Terminal_Set(self.effective_dims, self.target_dims, engref=self, function_ptr_to_var_node=self.var_func)
+            self.terminal = Terminal_Set(self.effective_dims, self.target_dims, engref=self, function_ptr_to_var_node=self.var_func,
+            num_variables=self.num_variables)
 
 
         #print("x tensor: ", self.terminal.set['x'])
@@ -1049,11 +1053,14 @@ class Engine:
     def final_transform_domain(self, final_tensor):
         #global _min_domain, _max_domain, _domain_delta
         final_tensor = tf.where(tf.math.is_nan(final_tensor), 0.0, final_tensor)
-
+        print('Final_tensor:', final_tensor)
         final_tensor = tf.clip_by_value(final_tensor, clip_value_min=_min_domain, clip_value_max=_max_domain)
+        print('Final_tensor:', final_tensor)
         #final_tensor = tf.clip_by_value(final_tensor, clip_value_min=-0x7fffffff, clip_value_max=0x7fffffff)
         final_tensor = tf.math.subtract(final_tensor, tf.constant(_min_domain, tf.float32, self.target_dims))
+        print('Final_tensor:', final_tensor)
         final_tensor = tf.scalar_mul(255 / _domain_delta, final_tensor)
+        print('Final_tensor:', final_tensor)
 
         #final_tensor = tf.cast(final_tensor, tf.uint8)
         return final_tensor
@@ -1117,7 +1124,11 @@ class Engine:
 
             # print(p['tree'].get_str())
             test_tens = p['tree'].get_tensor(self)
-            tens = self.final_transform_domain(test_tens)
+            #print('Test_tens:', test_tens)
+            tens = test_tens
+            #tens = self.final_transform_domain(test_tens)
+            #print('Tens:', tens)
+            #print('Tensor shape:', tens.shape)
             tensors.append(tens)
 
             # dur = time.time() - _start
@@ -1133,7 +1144,7 @@ class Engine:
 
         # calculate tensors
         #with tf.device(self.device):
-        if self.debug > 4: print("\nEvaluating generation: " + str(self.current_generation))
+        #if self.debug > 4: print("\nEvaluating generation: " + str(self.current_generation))
         with tf.device(self.device):
             tensors, time_taken = self.calculate_tensors(population)
         if self.debug > 4: print("Calculated " + str(len(tensors)) + " tensors in (s): " + str(time_taken))
@@ -1775,17 +1786,19 @@ def uniform_sampling(res, minval = _min_domain, maxval = _max_domain):
 # when calling inside the engine, we will provide the engine ref itself to allow terminal definition by expressions
 class Terminal_Set:
 
-    def __init__(self, effective_dim, resolution, function_ptr_to_var_node = resolve_var_node, debug = 0, engref = None):
+    def __init__(self, effective_dim, resolution, function_ptr_to_var_node = resolve_var_node, debug = 0, engref = None, num_variables=1):
         self.debug = debug
         self.engref = engref
         self.dimension = resolution[effective_dim] if (effective_dim < len(resolution)) else 1
-        self.set = self.make_term_variables(0, effective_dim, resolution, function_ptr_to_var_node) # x, y
-        self.latentset = self.make_term_variables(effective_dim, len(resolution), resolution, function_ptr_to_var_node) # z for terminal
+        self.set = self.make_term_variables(0, effective_dim, resolution, function_ptr_to_var_node, num_variables) # x, y
+        self.latentset = self.make_term_variables(effective_dim, len(resolution), resolution, function_ptr_to_var_node, 0) # z for terminal
 
-    def make_term_variables(self, start, end, resolution, fptr):
+    def make_term_variables(self, start, end, resolution, fptr, num_variables):
         res = {}
-        for i in range(start, end): # TODO, what does this dim - 1 do? Is it only to do with warp?
+        # for i in range(start, end): # TODO, what does this dim - 1 do? Is it only to do with warp?
+        for i in range(num_variables):
             digit = i
+            # name = ""
             name = f'v{i}'
 
             # while True:
@@ -1799,7 +1812,7 @@ class Terminal_Set:
             if self.debug > 2: print("[DEBUG]:\tAdded terminal " + str(name))
 
             vari = i # TODO: ye, this is because of images, right?....
-            if i < 2: vari = 1 - i
+            #if i < 2: vari = 1 - i
             res[name] = fptr(np.copy(resolution), vari)
             #res[name] = fptr(np.copy(resolution), minval = _min_domain, maxval = _max_domain)
         return res

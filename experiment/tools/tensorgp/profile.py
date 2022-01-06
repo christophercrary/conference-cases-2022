@@ -45,14 +45,17 @@ def initialize_terminals(dimensions, n):
     with open(f'{root_dir}/fitness_cases.pkl', 'rb') as f:
         fitness_cases = pickle.load(f)
 
-    print('n:', n)
+    #print('n:', n)
     
     # Infer two-dimensional `NumPy` array from tuple of tuples.
     fitness_cases = np.array(fitness_cases)
 
+    #print('Fitness cases:', fitness_cases)
+
     # Extract relevant variable data from the overall
     # array of fitness cases, casting this data to `float32`.
     res = tf.cast(fitness_cases[:dimensions[0], n], tf.float32)
+    #print('Res:', res)
 
     return res
 
@@ -73,7 +76,11 @@ def r2(**kwargs):
 
     for i in range(len(tensors)):
 
+        # print(f'Tensors[{i}]:', tensors[i])
+        # print(f'Target:', target)
+
         fit = tf_r2(target, tensors[i]).numpy()
+        # print('Fitness:', fit)
 
         if fit > max_fit:
             max_fit = fit
@@ -85,13 +92,13 @@ def r2(**kwargs):
         # print(f'Tensor[{i}]: {tensors[i]}')
         # print(f'Target: {target}')
 
-    # print(f'Length of fitness: {len(fitness)}')
+    # print(f'`Length of `fitness: {len(fitness)}')
 
     return population, population[best_ind]
 
 
 # Parameter for debug logging within TensorGP.
-debug = 5
+debug = 0
 
 # Computing devices to utilize.
 devices = ('/cpu:0', '/gpu:0')
@@ -111,26 +118,26 @@ function_sets = {
 num_programs_per_size_bin = 1
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 500,)#1000, 10000, 100000)
+num_fitness_cases = (10, 100, 1000, 10000)
 
 # Overall target.
 with open(f'{root_dir}/target.pkl', 'rb') as f:
     target_ = pickle.load(f)
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 1
+repeat = 3
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 1
+number = 2
 
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of minimum average
 # runtimes.
-num_epochs = 1
+num_epochs = 3
 
-# Minimum average runtimes for programs within each size bin,
+# Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
-min_avg_runtimes = []
+med_avg_runtimes = []
 
 # # Average of *minimum average runtimes* for each size bin,
 # # for each number of fitness cases, for each function set.
@@ -164,7 +171,7 @@ for device in devices:
     # For each device...
 
     # Prepare for statistics relevant to function set.
-    min_avg_runtimes.append([])
+    med_avg_runtimes.append([])
 
     for name, (num_functions, max_arity, 
         max_depth, bin_size) in function_sets.items():
@@ -182,7 +189,7 @@ for device in devices:
 
         # Prepare for statistics relevant to function set.
         # sizes.append([])
-        min_avg_runtimes[-1].append([])
+        med_avg_runtimes[-1].append([])
         # avg_min_avg_runtimes.append([])
         # med_min_avg_runtimes.append([])
         # min_min_avg_runtimes.append([])
@@ -207,17 +214,18 @@ for device in devices:
             #
             # There are `num_variables` dimensions, each
             # consisting of `nfc` fitness cases.
-            target_dims = (nfc, num_variables)
+            # target_dims = (nfc, nfc)
+            target_dims = (nfc,)
             #target_dims = tuple(nfc for _ in range(num_variables))
 
             # Target for given number of fitness cases.
             target = tf.cast(tf.convert_to_tensor(target_[:nfc]), tf.float32)
 
-            print(f'Shape of `target`: {tf.shape(target)}')
+            #print(f'Shape of `target`: {tf.shape(target)}')
 
             # Prepare for statistics relevant to the 
             # numbers of fitness cases and size bins.
-            min_avg_runtimes[-1][-1].append([[] for _ in range(num_size_bins)])
+            med_avg_runtimes[-1][-1].append([[] for _ in range(num_size_bins)])
 
             # Create an appropriate GP engine.
             engine = Engine(debug=debug,
@@ -228,7 +236,8 @@ for device in devices:
                             target=target,
                             fitness_func=r2,
                             population_size=num_programs_per_size_bin,
-                            var_func=initialize_terminals)
+                            var_func=initialize_terminals,
+                            num_variables = num_variables)
 
             for i in range(num_size_bins):
                 # For each size bin, calculate the relevant statistics.
@@ -241,21 +250,25 @@ for device in devices:
                 for _ in range(num_epochs):
                     # For each epoch...
 
-                    # Raw runtimes after running `fitness_func_wrap` 
-                    # function `repeat * number` times.
+                    # Raw runtimes after running the `fitness_func_wrap` 
+                    # function a total of `repeat * number` times. 
+                    # The resulting object is a list of `repeat` values,
+                    # where each represents a raw runtime after running
+                    # the relevant code `number` times.
                     runtimes = timeit.Timer(
                         'engine.fitness_func_wrap(population=population)',
                         globals=globals()).repeat(repeat=repeat, number=number)
 
-                    # Calculate and append minimum average runtime.
-                    min_avg_runtimes[-1][-1][-1][i].append(
-                        min(runtimes)/(repeat * number))
+                    # Average runtimes, taking into account `number`.
+                    avg_runtimes = [runtime/number for runtime in runtimes]
+
+                    # Calculate and append median average runtime.
+                    med_avg_runtimes[-1][-1][-1][i].append(
+                        np.median(avg_runtimes))
 
 # Preserve results.
 with open(f'{root_dir}/../results_tensorgp.pkl', 'wb') as f:
-    pickle.dump(min_avg_runtimes, f)
-
-print('Shape of `min_avg_runtimes`:', np.shape(np.array(min_avg_runtimes)))
+    pickle.dump(med_avg_runtimes, f)
 
         # # Average of *minimum average runtimes* for each size bin.
         # avg_min_avg_runtimes[-1].append(

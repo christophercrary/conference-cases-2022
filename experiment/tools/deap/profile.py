@@ -607,7 +607,7 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000, 100000)
+num_fitness_cases = (10, 100, 1000, 10000)
 
 # Random fitness case vector for maximum amount of fitness cases.
 fitness_cases_ = np.array(
@@ -626,22 +626,22 @@ with open(f'{root_dir}/target.pkl', 'wb') as f:
     pickle.dump(target_, f)
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 1
+repeat = 3
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 1
+number = 2
 
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of minimum average
 # runtimes.
-num_epochs = 1
+num_epochs = 3
 
 # # Programs sizes for each size bin, for each function set.
 # sizes = []
 
-# Minimum average runtimes for programs within each size bin,
+# Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
-min_avg_runtimes = []
+med_avg_runtimes = []
 
 # # Average of *minimum average runtimes* for each size bin,
 # # for each number of fitness cases, for each function set.
@@ -695,14 +695,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
     # Prepare for statistics relevant to function set.
     # sizes.append([])
-    min_avg_runtimes.append([])
-    # avg_min_avg_runtimes.append([])
-    # med_min_avg_runtimes.append([])
-    # min_min_avg_runtimes.append([])
-    # max_min_avg_runtimes.append([])
-    # std_dev_min_avg_runtimes.append([])
-    # iqr_min_avg_runtimes.append([])
-    # med_neps.append([])
+    med_avg_runtimes.append([])
 
     # For each amount of fitness cases, and for each size bin, 
     # calculate the relevant statistics.
@@ -719,7 +712,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
         # Prepare for statistics relevant to the 
         # numbers of fitness cases and size bins.
-        min_avg_runtimes[-1].append([[] for _ in range(num_size_bins)])
+        med_avg_runtimes[-1].append([[] for _ in range(num_size_bins)])
 
         for i in range(num_size_bins):
 
@@ -733,96 +726,24 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
             for _ in range(num_epochs):
                 # For each epoch...
 
-                # Raw runtimes after running `evaluate` function
-                # `repeat * number` times.
+                # Raw runtimes after running the `fitness_func_wrap` 
+                # function a total of `repeat * number` times. 
+                # The resulting object is a list of `repeat` values,
+                # where each represents a raw runtime after running
+                # the relevant code `number` times.
                 runtimes = timeit.Timer(
                     'evaluate(primitive_set, trees, fitness_cases, target)',
                     globals=globals()).repeat(repeat=repeat, number=number)
 
-                # Calculate and append minimum average runtime.
-                min_avg_runtimes[-1][-1][i].append(
-                    min(runtimes)/(repeat * number))
+                # Average runtimes, taking into account `number`.
+                avg_runtimes = [runtime/number for runtime in runtimes]
+
+                # Calculate and append median average runtime.
+                med_avg_runtimes[-1][-1][i].append(
+                    np.median(avg_runtimes))
 
 # Preserve results.
 with open(f'{root_dir}/../results_deap.pkl', 'wb') as f:
-    pickle.dump(min_avg_runtimes, f)
-
-#print('Shape of `min_avg_runtimes`:', np.shape(np.array(min_avg_runtimes)))
-
-#     # Average of *minimum average runtimes* for each size bin.
-#     avg_min_avg_runtimes.append([np.mean(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Averages of minimum average runtimes:', avg_min_avg_runtimes[-1])
-#     print('\n')
-
-#     # Median of *minimum average runtimes* for each size bin.
-#     med_min_avg_runtimes.append([np.median(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Medians of minimum average runtimes:', med_min_avg_runtimes[-1])
-#     print('\n')
-
-#     # Minimum of *minimum average runtimes* for each size bin.
-#     min_min_avg_runtimes.append([min(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Minimums of minimum average runtimes:', min_min_avg_runtimes[-1])
-#     print('\n')
-
-#     # Maximum of *minimum average runtimes* for each size bin.
-#     max_min_avg_runtimes.append([max(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Maximums of minimum average runtimes:', max_min_avg_runtimes[-1])
-#     print('\n')
-
-#     # Standard deviation of minimum average runtimes for each size bin.
-#     std_dev_min_avg_runtimes.append([np.std(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Standard deviations of minimum average runtimes:', 
-#         std_dev_min_avg_runtimes[-1])
-#     print('\n')
-
-#     # Interquartile range of minimum average runtimes for each size bin.
-#     iqr_min_avg_runtimes.append([iqr(min_avg_runtimes[-1][i]) 
-#         for i in range(num_size_bins)])
-#     print('Interquartile range of minimum average runtimes:', 
-#         iqr_min_avg_runtimes[-1])
-#     print('\n\n')
-
-#     print('Sizes:', sizes[-1])
-
-#     # Median node evaluations per second relevant to function set.
-#     med_neps.append([(size*nfc)/med 
-#         for size, med in zip(sizes[-1], med_min_avg_runtimes[-1])])
-#     print('Median node evaluations per second:', med_neps[-1])
-#     print('\n')
-
-
-# # Plot graph of median node evaluations per second, 
-# # for each function set.
-# for i, (name, (function_set, max_depth, bin_size)) in enumerate(
-#     function_sets.items()):
-
-#     # Maximum arity for function set.
-#     max_arity = max([arity for _, arity in function_set])
-
-#     # Maximum program size for function set.
-#     max_possible_size = get_max_size(max_arity, max_depth)
-
-#     # Number of size bins.
-#     num_size_bins = int(math.ceil(max_possible_size/bin_size))
-
-#     # Index range for plot.
-#     index = range(1, num_size_bins+1)
-
-#     # Plot for function set.
-#     # plt.plot(index, [size*nfc for size in sizes[i]])
-#     plt.plot(index, med_neps[i], label=f'Function set {name}')
-#     # plt.plot(index, [0.00000676*x+0.00009423622 for x in index])
-
-# plt.xlabel('Size bin number')
-# plt.ylabel('Median of node evaluations per second')
-# plt.title('Median of node evaluations per second vs. size bin number')
-# plt.legend(loc='upper left')
-
-# plt.show()
+    pickle.dump(med_avg_runtimes, f)
         
 
