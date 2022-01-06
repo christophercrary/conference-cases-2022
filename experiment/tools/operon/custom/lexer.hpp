@@ -42,12 +42,12 @@ constexpr int token_count = token_kind::eof + 1;
 static constexpr std::array<const char*, token_count> token_name = {
     "(",
     ")",
-    "+",
-    "-",
-    "*",
+    "add",
+    "sub",
+    "mul",
     "aq",
 
-    "/",
+    "div",
 
     "log",
     "exp",
@@ -68,12 +68,12 @@ static constexpr std::array<const char*, token_count> token_name = {
 const robin_hood::unordered_flat_map<std::string_view, token_kind> token_map = {
     { "(", token_kind::lparen },
     { ")", token_kind::rparen },
-    { "+", token_kind::add },
-    { "-", token_kind::sub },
-    { "*", token_kind::mul },
+    { "add", token_kind::add },
+    { "sub", token_kind::sub },
+    { "mul", token_kind::mul },
     { "aq", token_kind::aq },
 
-    { "/", token_kind::div },
+    { "div", token_kind::div },
 
     { "log", token_kind::log },
     { "exp", token_kind::exp },

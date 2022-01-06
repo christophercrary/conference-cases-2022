@@ -348,7 +348,7 @@ void get_results(std::string function_set, std::string fitness_case, int progs_p
 
 		if (std::getline(file, str))
 		{
-		    std::cout<<str<<std::endl;
+		   // std::cout<<str<<std::endl;
 		    input_strs->push_back(str);    
 		}
 
@@ -448,18 +448,17 @@ void get_results(std::string function_set, std::string fitness_case, int progs_p
 		
 	//	std::vector<double> results_vec;
 		std::string str_bin = std::to_string(bin);		
-		out_file << "bin: " + str_bin + ",";
-		auto results = outer_b.results();
-		for(int gen2 = 0; gen2 < NB_NUM_GENERATIONS; gen2++)
+		out_file << "bin: " + str_bin;
+		for(int gen = 0; gen < NB_NUM_GENERATIONS; gen++)
 		{
 			//get results from nanobench
-			 //auto results = outer_b.results();
-			 double median = results[gen2].median(nb::Result::Measure::elapsed);
+			 auto results = outer_b.results();
+			 double median = results[gen].median(nb::Result::Measure::elapsed);
 			 double node_ops = outer_b.batch() / median;
 			// printf("node op/ns direct: %f", node_ops);    
 	//		results_vec.push_back(node_ops);
 			out_file << std::to_string(node_ops);
-			if(NB_NUM_GENERATIONS - gen2 != 1){out_file <<","; }
+
 		}
 
 		out_file <<"\n";
@@ -487,7 +486,7 @@ void get_results(std::string function_set, std::string fitness_case, int progs_p
 
 	const int NUM_FUNCTION_SETS = 3;
 
-	const int NUM_PROGRAMS_PER_BIN = 1;
+	const int NUM_PROGRAMS_PER_BIN = 32;
 
 //      const int NB_NUM_GENERATIONS = 3;
 //	const int NB_NUM_EPOCHS = 3;
