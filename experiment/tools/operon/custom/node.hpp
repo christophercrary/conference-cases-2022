@@ -72,7 +72,7 @@ inline NodeType& operator^=(NodeType& lhs, NodeType rhs)
 }
 
 namespace {
-    std::array<std::string, NodeTypes::Count> nodeNames = { "+", "*", "-", "/", "aq", "pow", "log", "exp", "sin", "cos", "tan", "tanh", "sqrt", "cbrt", "ln", "square","dyn", "constant", "variable" };
+    std::array<std::string, NodeTypes::Count> nodeNames = { "add", "mult", "sub", "div", "aq", "pow", "log", "exp", "sin", "cos", "tan", "tanh", "sqrt", "cbrt", "ln", "square","dyn", "constant", "variable" };
 }
 
 struct Node {
