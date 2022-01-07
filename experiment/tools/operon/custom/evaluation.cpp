@@ -455,10 +455,10 @@ void get_results(std::string function_set, std::string fitness_case, int progs_p
 			//get results from nanobench
 			 //auto results = outer_b.results();
 			 double median = results[gen2].median(nb::Result::Measure::elapsed);
-			 double node_ops = outer_b.batch() / median;
+			// double node_ops = outer_b.batch() / median;
 			// printf("node op/ns direct: %f", node_ops);    
 	//		results_vec.push_back(node_ops);
-			out_file << std::to_string(node_ops);
+			out_file << std::to_string(median*1000000);
 			if(NB_NUM_GENERATIONS - gen2 != 1){out_file <<","; }
 		}
 
@@ -507,7 +507,7 @@ void get_results(std::string function_set, std::string fitness_case, int progs_p
 	{
 
 	  std::ofstream out_file;
-	  out_file.open("../../../../results/programs/" + function_sets[funct_set] + "/operon_results.csv");
+	  out_file.open("../../../../results/" + function_sets[funct_set] + "_operon_results.csv");
 		
 	  //look for the right number of fitness cases to test
 	  for(int fit_ind = 0; fit_ind < NUM_FITNESS_CASES; fit_ind++)

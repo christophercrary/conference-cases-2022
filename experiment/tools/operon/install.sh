@@ -3,20 +3,6 @@ if [ -d operon ]; then
     rm -rf operon
 fi
 
-if [ -m operon ]; then
-  cd operon/build
-  \cp ../../custom/node.hpp ../include/operon/core
-  \cp ../../custom/functions.hpp ../include/operon/interpreter
-  \cp ../../custom/infix.hpp ../include/operon/parser
-  \cp ../../custom/lexer.hpp ./_deps/infix_parser-src/include
-  \cp ../../custom/parser.hpp ./_deps/infix_parser-src/include
-  \cp ../../custom/sexpr.hpp ./_deps/infix_parser-src/src
-  \cp ../../custom/evaluation.cpp ../test/performance
-
-# Build custom Operon target.
-  make -j operon-test
-fi
-
 
 # Clone Operon.
 git clone https://github.com/heal-research/operon operon
