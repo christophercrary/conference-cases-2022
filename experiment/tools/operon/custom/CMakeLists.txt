@@ -174,14 +174,14 @@ FetchContent_Declare(
     vectorclass
     GIT_REPOSITORY https://github.com/vectorclass/version2
     GIT_TAG master
-    DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vcl
-    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vcl
+    DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vcl/vectorclass
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vcl/vectorclass
 )
 
 FetchContent_Declare(
     vstat
     GIT_REPOSITORY https://github.com/foolnotion/vstat
-    GIT_TAG 1ae255167708916cf1f9e494769ac978fdffd888
+    GIT_TAG main
     DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vstat
     SOURCE_DIR ${DOWNLOAD_DIR}
 )
@@ -208,9 +208,11 @@ set(THIRDPARTY_INCLUDE_DIRS
     ${gsl_SOURCE_DIR}/include
     ${nanobench_SOURCE_DIR}
     ${span-lite_SOURCE_DIR}
-    ${vectorclass_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/thirdparty/vcl/
+    ${PROJECT_SOURCE_DIR}/thirdparty/vcl/vectorclass
     ${xxhash_SOURCE_DIR}
-    ${VSTAT_INCLUDE_DIRS}
+    ${vstat_SOURCE_DIR}/include
+    ${vstat_SOURCE_DIR}/include/vstat
 )
 
 # populate optional content

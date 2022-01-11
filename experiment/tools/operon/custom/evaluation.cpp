@@ -268,7 +268,7 @@ void gen(std::string const& typeName, char const* mustacheTemplate,
                 auto id = executor.this_worker_id();
                 if (slots[id].size() < range.Size()) { slots[id].resize(range.Size()); }
                 auto res =  evaluator(rd, ind, slots[id]).front();
-                printf("result: %f", res);
+                //printf("result: %f", res);
                 return res;
             });
 
@@ -297,237 +297,233 @@ void gen(std::string const& typeName, char const* mustacheTemplate,
     }
 
 
+void get_results(
+    std::string function_set, std::string fitness_case, 
+    int progs_per_bin, int num_size_bins, std::ofstream &out_file) {
+    /* Calculate some profiling results. */
+
+    // Number of times that nanobench is independently executed, 
+    // in order to generate a list of median average runtimes.
+    const int NB_NUM_GENERATIONS = 1;
+
+    // Number of epochs within a single nanobench run.
+    const int NB_NUM_EPOCHS = 1;
+
+    // Number of iterations within a single nanobench epoch.
+    const int NB_NUM_ITERATIONS = 1;
+
+    // File path to the relevant program strings.
+    std::string prog_path = "../../../../results/programs/" + 
+        function_set + "/programs_operon.txt";
+
+    // File path to the relevant dataset.
+    std::string fit_path = "../../../../results/programs/" + 
+        function_set  + "/fitness_cases/" + fitness_case; 
+
+    // Object to contain the relevant dataset.
+    auto ds = Dataset(fit_path, true);
+
+    // Name for target vector.
+    auto target = "y";
+
+    // Retrieve fitness cases for the relevant variable terminals.
+    auto variables = ds.Variables();
+    std::vector<Variable> inputs;
+    std::copy_if(
+        variables.begin(), variables.end(), 
+        std::back_inserter(inputs), [&](auto const& v) { 
+            return v.Name != target; });
+    Range range = { 0, ds.Rows() };
+    size_t num_vars = ds.Cols() - 1;
+
+    auto problem = Problem(ds).Inputs(inputs).Target(target).
+        TrainingRange(range).TestRange(range);
+
+    // File containing program strings.
+    std::ifstream file(prog_path);
+
+    std::string str;
+
+    for(int bin = 0; bin < num_size_bins; bin++)
+    {
+        // For size bin `bin`...
+        std::cout << "Size bin `" << bin << "`\n"; 
+
+        // Vector to contain program strings for size bin `i`.
+        std::vector<std::string> *input_strs = new std::vector<std::string>();
+
+        // Retrieve the relevant program strings for size bin `i`.
+        for(int num_progs = 0; num_progs < progs_per_bin; num_progs++)
+            if (std::getline(file, str))
+                input_strs->push_back(str);
+
+        // Vector to contain tree representations of programs
+        // for size bin `bin`.
+        std::vector<Tree> trees;
+
+        Hasher<HashFunction::XXHash> hasher;
+
+        // Configure variable terminal data.
+        for (size_t j = 0; j < input_strs->size(); j++)
+        {
+            robin_hood::unordered_flat_map<std::string, Operon::Hash> vars_map;
+            std::unordered_map<Operon::Hash, std::string> vars_names;
+            for (size_t i = 0; i <= num_vars; ++i) {
+                auto name = fmt::format("v{}", i);
+                auto hash = hasher(
+                    reinterpret_cast<uint8_t const*>(name.data()), 
+                    name.size() * sizeof(char) / sizeof(uint8_t));
+                vars_map[name] = hash;
+                vars_names[hash] = name;
+            }
+
+            // Construct tree from program string.
+            auto tree = Operon::InfixParser::Parse(
+                input_strs->at(j), vars_map);
+
+            // fmt::print(
+            //     "\nTREE: \n{}\n", Operon::InfixFormatter::Format(
+            //         tree, vars_names));
+
+            trees.push_back(tree);
+
+        }
+
+        nb::Bench outer_b; 
+
+        auto totalNodes = TotalNodes(trees);
+        Operon::Vector<Operon::Scalar> buf(range.Size());
+
+        Operon::RandomGenerator rd(1234);
+
+        std::vector<Individual> individuals(trees.size());
+        for (size_t i = 0; i < individuals.size(); ++i) {
+            individuals[i].Genotype = trees.at(i);
+        }
+
+        // Nanobench evaluator.
+        auto test = [&](nb::Bench &b, std::string const& name, 
+            EvaluatorBase&& evaluator, int epochs, int epoch_iterations) {
+
+            evaluator.SetLocalOptimizationIterations(0);
+            evaluator.SetBudget(std::numeric_limits<size_t>::max());
+            tf::Executor executor(std::thread::hardware_concurrency());
+            tf::Taskflow taskflow;
+
+            std::vector<Operon::Vector<Operon::Scalar>> slots(
+                executor.num_workers());
+
+            double sum{0};
+            taskflow.transform_reduce(
+                individuals.begin(), individuals.end(), sum, 
+                std::plus<>{}, [&](Operon::Individual& ind) {
+
+                    auto id = executor.this_worker_id();
+                    if (slots[id].size() < range.Size()) 
+                        slots[id].resize(range.Size()); 
+                    auto fitness = evaluator(rd, ind, slots[id]).front();
+
+                    // printf("Fitness: %f\n", fitness);
+
+                    return fitness;
+                
+                });
+
+            b.batch(totalNodes * range.Size()).epochs(epochs).
+                epochIterations(epoch_iterations).run(name, [&]() {
+
+                sum = 0;
+                executor.run(taskflow).wait();
+                return sum;
+
+            });
+
+        
+        };
 
 
-void get_results(std::string function_set, std::string fitness_case, int progs_per_bin, int bin_size, std::ofstream &out_file)
-{
+        for (int gen = 0; gen < NB_NUM_GENERATIONS; gen++)
+        {
+            Interpreter interpreter;
+            test(
+                outer_b, "R2", 
+                // R2Evaluator(problem, interpreter),
+                // Operon::Evaluator<Operon::R2, true>(problem, interpreter),
+                Operon::Evaluator<Operon::R2, true>(problem, interpreter),
+                NB_NUM_EPOCHS, NB_NUM_ITERATIONS);
+        }
+        
+        // For the relevant size bin, print out a list of 
+        // `NB_NUM_GENERATIONS` median runtimes calculated 
+        // by running nanobench `NB_NUM_GENERATIONS` times.
+        // For each nanobench run, there were `NB_NUM_EPOCHS`
+        // epochs, and for each epoch, there were `NB_NUM_
+        // ITERATIONS` iterations.
 
- 
+        std::string str_bin = std::to_string(bin);		
+        out_file << "bin: " + str_bin + ",";
+        auto results = outer_b.results();
 
+        for (int i = 0; i < NB_NUM_GENERATIONS; i++)
+        {
+            // Retrieve median runtime for each "generation".
+            double median = results[i].median(nb::Result::Measure::elapsed);
 
-	const int NB_NUM_GENERATIONS = 3;
-	const int NB_NUM_EPOCHS = 3;
-	const int NB_NUM_ITERATIONS = 2;
+            // Write median runtime in terms of microseconds,
+            // to utilize more significant digits.
+            out_file << std::to_string(median*1000000);
 
+            if (NB_NUM_GENERATIONS - i != 1)
+                out_file << ",";
+        }
 
-	std::string prog_path = "../../../../results/programs/" + function_set + "/programs_operon.txt";
-	std::string fit_path = "../../../../results/programs/" + function_set  + "/fitness_cases/" + fitness_case; 
+        out_file <<"\n";
+        
+    }
 
-
-        auto ds = Dataset(fit_path, true);
-
-        auto target = "y";
-        auto variables = ds.Variables();
-        std::vector<Variable> inputs;
-        std::copy_if(variables.begin(), variables.end(), std::back_inserter(inputs), [&](auto const& v) { return v.Name != target; });
-        Range range = { 0, ds.Rows() };
-        size_t num_vars = ds.Cols() - 1; //-1 because there is a target variable
-
-        auto problem = Problem(ds).Inputs(inputs).Target(target).TrainingRange(range).TestRange(range);
-        //problem.GetPrimitiveSet().SetConfig(Operon::PrimitiveSet::Arithmetic);
-
-        //std::uniform_int_distribution<size_t> sizeDistribution(1, maxLength);
-        //auto creator = BalancedTreeCreator { problem.GetPrimitiveSet(), inputs };
-
-
-               //read in input strings, which are in infix notation
-        std::ifstream file(prog_path);
-
-        std::cout<<"\nstring parsing\n";
-        std::string str;
-
-	for(int bin = 0; bin < bin_size; bin++)
-	{
-
-	   std::vector<std::string> *input_strs = new std::vector<std::string>();
-
-
-
-	  for(int num_progs = 0; num_progs < progs_per_bin; num_progs++)
-	  {
-
-		if (std::getline(file, str))
-		{
-		    std::cout<<str<<std::endl;
-		    input_strs->push_back(str);    
-		}
-
-
-	  }  
-
-
-		std::vector<Tree> trees; //dont allocate this with new. 
-
-		Hasher<HashFunction::XXHash> hasher;
-
-
-		for (size_t j = 0; j < input_strs->size(); j++)
-		{
-		    robin_hood::unordered_flat_map<std::string, Operon::Hash> vars_map;
-		    std::unordered_map<Operon::Hash, std::string> vars_names;
-		    for (size_t i = 0; i <= num_vars; ++i) {
-			auto name = fmt::format("v{}", i);
-			auto hash = hasher(reinterpret_cast<uint8_t const*>(name.data()), name.size() * sizeof(char) / sizeof(uint8_t));
-			vars_map[name] = hash;
-			vars_names[hash] = name;
-		    }
-
-		   // DispatchTable ft1;
-		    auto tree = Operon::InfixParser::Parse(input_strs->at(j), vars_map);
-		   // std::cout<<"\nafter parser\n";
-		    //fmt::print("\nTREE: \n{}\n", Operon::InfixFormatter::Format(tree, vars_names));
-		    trees.push_back(tree);
-
-		}
-
-		 nb::Bench outer_b; 
-		//b.title("Evaluator performance").relative(true).performanceCounters(true).minEpochIterations(10);
-
-		auto totalNodes = TotalNodes(trees);
-		//printf("\ntotal Nodes %d\n", totalNodes); //added Brit C.
-		Operon::Vector<Operon::Scalar> buf(range.Size());
-
-		Operon::RandomGenerator rd(1234); //doesnt seem like this is used in the evaluate function, at least for MSE (which is good)
-	 
-
-		//look
-
-
-
-		//std::generate(trees.begin(), trees.end(), [&]() { return creator(rd, sizeDistribution(rd), 0, maxDepth); });
-
-		std::vector<Individual> individuals(trees.size()); //create individuals out of trees for GP alg
-		for (size_t i = 0; i < individuals.size(); ++i) {
-		    individuals[i].Genotype = trees.at(i);
-		}
-
-	//	Interpreter interpreter;
-
-		auto test = [&](nb::Bench &b, std::string const& name, EvaluatorBase&& evaluator, int epochs, int epoch_iterations) {
-		    evaluator.SetLocalOptimizationIterations(0);
-		    evaluator.SetBudget(std::numeric_limits<size_t>::max());
-		    tf::Executor executor(std::thread::hardware_concurrency());
-		    tf::Taskflow taskflow;
-
-		    std::vector<Operon::Vector<Operon::Scalar>> slots(executor.num_workers());
-		    double sum{0};
-		    taskflow.transform_reduce(individuals.begin(), individuals.end(), sum, std::plus<>{}, [&](Operon::Individual& ind) {
-			auto id = executor.this_worker_id();
-			if (slots[id].size() < range.Size()) { slots[id].resize(range.Size()); }
-			auto res =  evaluator(rd, ind, slots[id]).front();
-			printf("result: %f", res);
-			return res;
-		    });
-
-	//            auto start = std::chrono::high_resolution_clock::now(); //epochs is number of measurements to perform
-		    b.batch(totalNodes * range.Size()).epochs(epochs).epochIterations(epoch_iterations).run(name, [&]() {
-			sum = 0;
-			executor.run(taskflow).wait();
-			return sum;
-		    });
-
-           
- //           auto stop = std::chrono::high_resolution_clock::now();
-  //          auto duration = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count()) / 1e6;
-  //          double node_evals_psec = b.batch() * static_cast<double>(b.epochs() * b.epochIterations()) / duration;
-  //          fmt::print("node evals / s: {:L}\n", node_evals_psec);
-          //  printf("node evals from nb: %f",b.results()[1]);
-        	};
-
-
-
-
-
-
-		for(int gen = 0; gen < NB_NUM_GENERATIONS; gen++)
-		{
-			Interpreter interpreter;
-			test(outer_b, "R2", Operon::Evaluator<Operon::R2, false>(problem, interpreter), NB_NUM_EPOCHS, NB_NUM_ITERATIONS);
-			//gen("json", ankerl::nanobench::templates::json(), outer_b);
-		}
-		
-	//	std::vector<double> results_vec;
-		std::string str_bin = std::to_string(bin);		
-		out_file << "bin: " + str_bin + ",";
-		auto results = outer_b.results();
-		for(int gen2 = 0; gen2 < NB_NUM_GENERATIONS; gen2++)
-		{
-			//get results from nanobench
-			 //auto results = outer_b.results();
-			 double median = results[gen2].median(nb::Result::Measure::elapsed);
-			// double node_ops = outer_b.batch() / median;
-			// printf("node op/ns direct: %f", node_ops);    
-	//		results_vec.push_back(node_ops);
-			out_file << std::to_string(median*1000000);
-			if(NB_NUM_GENERATIONS - gen2 != 1){out_file <<","; }
-		}
-
-		out_file <<"\n";
-		
-		//write these results to a csv 
-
-	
-
-	} //end 
-
-
-	return;
-
+    return;
 
 }
-
-
-
-
 
 
     TEST_CASE("Node Evaluations Batch")
     {
-	const int NUM_FITNESS_CASES = 4;
+        const int NUM_FITNESS_CASE_AMOUNTS = 5;
 
-	const int NUM_FUNCTION_SETS = 3;
+        const int NUM_FUNCTION_SETS = 3;
 
-	const int NUM_PROGRAMS_PER_BIN = 1;
+        const int NUM_PROGRAMS_PER_BIN = 2;
+        
+        std::string fitness_cases[NUM_FITNESS_CASE_AMOUNTS] = 
+            {"10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv"};
 
-//      const int NB_NUM_GENERATIONS = 3;
-//	const int NB_NUM_EPOCHS = 3;
-//	const int NB_NUM_ITERATIONS = 2;
-	
-	std::string fitness_cases[NUM_FITNESS_CASES] = {"10.csv", "100.csv", "1000.csv", "10000.csv"};
+        std::string function_sets[NUM_FUNCTION_SETS] = 
+            {"nicolau_a", "nicolau_b", "nicolau_c"};
 
-	std::string function_sets[NUM_FUNCTION_SETS] = {"nicolau_a", "nicolau_b", "nicolau_c"};
+        int size_bins[NUM_FUNCTION_SETS] = {128, 63, 63};
 
+        for(int i = 0; i < NUM_FUNCTION_SETS; i++)
+        {
+            // For each function set...
 
-	int size_bins[NUM_FUNCTION_SETS] = {128, 63, 63};
+            std::ofstream out_file;
+            out_file.open(
+                "../../../../results/" + std::string("results_operon_") +
+                function_sets[i] + ".csv");
+            
+            for(int j = 0; j < NUM_FITNESS_CASE_AMOUNTS; j++)
+            {
+                // For each number of fitness cases...
+                get_results(
+                    function_sets[i], fitness_cases[j], 
+                    NUM_PROGRAMS_PER_BIN, size_bins[i], out_file);       
+            }
 
+            out_file.close();
 
-	//lets start looping
-	//for each function set
-	for(int funct_set = 0; funct_set < NUM_FUNCTION_SETS; funct_set++)
-	{
+        }
 
-	  std::ofstream out_file;
-	  out_file.open("../../../../results/" + function_sets[funct_set] + "_operon_results.csv");
-		
-	  //look for the right number of fitness cases to test
-	  for(int fit_ind = 0; fit_ind < NUM_FITNESS_CASES; fit_ind++)
-	  {
-
-//		std::string path = "../../../results/programs/" + function_sets[funct_set] + "/fitness_cases/" + fitness_cases; 
-		get_results(function_sets[funct_set], fitness_cases[fit_ind], NUM_PROGRAMS_PER_BIN, size_bins[funct_set], out_file);
-				
-
-	  }
-
-
-	 out_file.close();
-
-	}
-
-
-
-}
-
+    }
 
 
 

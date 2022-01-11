@@ -3,7 +3,6 @@ if [ -d operon ]; then
     rm -rf operon
 fi
 
-
 # Clone Operon.
 git clone https://github.com/heal-research/operon operon
 cd operon
@@ -27,6 +26,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_OPENLIBM=ON -DCERES_TINY_SOLVER=ON -DU
 
 # Utilize some custom files for the purposes of profiling.
 \cp ../../custom/node.hpp ../include/operon/core
+\cp ../../custom/metrics.hpp ../include/operon/core
 \cp ../../custom/functions.hpp ../include/operon/interpreter
 \cp ../../custom/infix.hpp ../include/operon/parser
 \cp ../../custom/lexer.hpp ./_deps/infix_parser-src/include

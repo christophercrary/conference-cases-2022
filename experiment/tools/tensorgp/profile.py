@@ -37,33 +37,12 @@ def get_max_size(m, d):
 ######################################################################## Profiling of program evaluation mechanism given by TensorGP.
 ########################################################################
 
-def initialize_terminals(dimensions, n):
-    # Read fitness case data from file. The data is stored as 
-    # a tuple of tuples, effectively a two-dimensional array,
-    # with the columns specifying variables, and the rows 
-    # specifying particular fitness cases.
-    with open(f'{root_dir}/inputs.pkl', 'rb') as f:
-        inputs = pickle.load(f)
-
-    #print('n:', n)
-    
-    # Infer two-dimensional `NumPy` array from tuple of tuples.
-    inputs = np.array(inputs)
-
-    #print('Fitness cases:', inputs)
-
-    # Extract relevant variable data from the overall
-    # array of fitness cases, casting this data to `float32`.
-    res = tf.cast(inputs[:dimensions[0], n], tf.float32)
-    #print('Res:', res)
-
-    return res
-
 def r2(**kwargs):
     """R-squared fitness function."""
     population = kwargs.get('population')
     tensors = kwargs.get('tensors')
-    target = kwargs.get('target')
+    target = kwargs.get('target'
+    )
 
     # print('Population size:', len(population))
     # print('Shape of tensors:', tf.shape(tensors))
@@ -94,7 +73,7 @@ def r2(**kwargs):
 
     # print(f'`Length of `fitness: {len(fitness)}')
 
-    return population, population[best_ind]
+    return population, best_ind
 
 
 # Parameter for debug logging within TensorGP.
@@ -115,57 +94,37 @@ function_sets = {
 }
 
 # Number of programs per size bin.
-num_programs_per_size_bin = 1
+num_programs_per_size_bin = 2
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000)
+num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
-# Overall target.
+# Overall set of input vectors.
+with open(f'{root_dir}/inputs.pkl', 'rb') as f:
+    inputs_ = pickle.load(f)
+
+# Overall target vector.
 with open(f'{root_dir}/target.pkl', 'rb') as f:
     target_ = pickle.load(f)
 
+# Infer `NumPy` arrays for input/target vectors.
+inputs_ = np.array(inputs_)
+target_ = np.array(target_)
+
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 3
+repeat = 1
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 2
+number = 1
 
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of minimum average
 # runtimes.
-num_epochs = 3
+num_epochs = 1
 
 # Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
 med_avg_runtimes = []
-
-# # Average of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# avg_min_avg_runtimes = []
-
-# # Median of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# med_min_avg_runtimes = []
-
-# # Minimum of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# min_min_avg_runtimes = []
-
-# # Maximum of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# max_min_avg_runtimes = []
-
-# # Standard deviation of *minimum average runtimes* for each size 
-# # bin, for each number of fitness cases, for each function set.
-# std_dev_min_avg_runtimes = []
-
-# # Interquartile range of *minimum average runtimes* for each size 
-# # bin, for each number of fitness cases, for each function set.
-# iqr_min_avg_runtimes = []
-
-# # Median node evaluations per second (NEPS) for each size bin,
-# # for each number of fitness cases, for each function set.
-# med_neps = []
 
 for device in devices:
     # For each device...
@@ -179,7 +138,7 @@ for device in devices:
         print(f'Function set `{name}`:')
 
         # Number of variables for given function set.
-        num_variables = num_functions-1
+        num_variables = num_functions - 1
 
         # Maximum program size for function set.
         max_possible_size = get_max_size(max_arity, max_depth)
@@ -188,40 +147,39 @@ for device in devices:
         num_size_bins = int(math.ceil(max_possible_size/bin_size))
 
         # Prepare for statistics relevant to function set.
-        # sizes.append([])
         med_avg_runtimes[-1].append([])
-        # avg_min_avg_runtimes.append([])
-        # med_min_avg_runtimes.append([])
-        # min_min_avg_runtimes.append([])
-        # max_min_avg_runtimes.append([])
-        # std_dev_min_avg_runtimes.append([])
-        # iqr_min_avg_runtimes.append([])
-        # med_neps.append([])
 
         # Read in the programs relevant to the function set from file.
         # This file contains `population_size * num_size_bins` programs,
         # representing the `population_size` programs for each of the
         # `num_size_bins` size bins.
-        with open(
-            f'{root_dir}/{name}/programs_tensorgp.txt', 'r') as f:
+        with open(f'{root_dir}/{name}/programs_tensorgp.txt', 'r') as f:
             programs = f.readlines()
 
         for nfc in num_fitness_cases:
             # For each number of fitness cases...
             print(f'Number of fitness cases: `{nfc}`')
 
-            # Tensor dimensions for this test case.
-            #
-            # There are `num_variables` dimensions, each
-            # consisting of `nfc` fitness cases.
-            # target_dims = (nfc, nfc)
+            # Create a terminal set relevant to the function set.
+
+            # Tensor dimensions for the current number of fitness cases.
             target_dims = (nfc,)
-            #target_dims = tuple(nfc for _ in range(num_variables))
+
+            # Number of fitness case dimensions. Note that this 
+            # is *not* the same thing as the number of variable
+            # terminals.
+            num_dimensions = 1
+
+            terminal_set = Terminal_Set(num_dimensions, target_dims)
+
+            # Add custom terminals and remove default terminal.
+            for i in range(num_variables):
+                terminal_set.add_to_set(
+                    f'v{i}', tf.cast(inputs_[:nfc, i], tf.float32))
+            terminal_set.remove_from_set('x')
 
             # Target for given number of fitness cases.
             target = tf.cast(tf.convert_to_tensor(target_[:nfc]), tf.float32)
-
-            #print(f'Shape of `target`: {tf.shape(target)}')
 
             # Prepare for statistics relevant to the 
             # numbers of fitness cases and size bins.
@@ -232,15 +190,17 @@ for device in devices:
                             seed=seed,
                             device=device,
                             operators=functions,
+                            terminal_set=terminal_set,
                             target_dims=target_dims,
                             target=target,
                             fitness_func=r2,
                             population_size=num_programs_per_size_bin,
-                            var_func=initialize_terminals,
-                            num_variables = num_variables)
+                            min_domain=-10000,
+                            max_domain=10000)
 
             for i in range(num_size_bins):
                 # For each size bin, calculate the relevant statistics.
+                print(f'Size bin `{i}`...')
 
                 # Population relevant to the current size bin.
                 population, *_ = engine.generate_pop_from_expr(
@@ -269,87 +229,3 @@ for device in devices:
 # Preserve results.
 with open(f'{root_dir}/../results_tensorgp.pkl', 'wb') as f:
     pickle.dump(med_avg_runtimes, f)
-
-        # # Average of *minimum average runtimes* for each size bin.
-        # avg_min_avg_runtimes[-1].append(
-        #     [np.mean(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Averages of minimum average runtimes:', 
-        #         avg_min_avg_runtimes[-1][-1])
-        # print('\n')
-
-        # # Median of *minimum average runtimes* for each size bin.
-        # med_min_avg_runtimes[-1].append(
-        #     [np.median(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Medians of minimum average runtimes:', 
-        #         med_min_avg_runtimes[-1][-1])
-        # print('\n')
-
-        # # Minimum of *minimum average runtimes* for each size bin.
-        # min_min_avg_runtimes[-1].append(
-        #     [min(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Minimums of minimum average runtimes:', 
-        #         min_min_avg_runtimes[-1][-1])
-        # print('\n')
-
-        # # Maximum of *minimum average runtimes* for each size bin.
-        # max_min_avg_runtimes[-1].append(
-        #     [max(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Maximums of minimum average runtimes:', 
-        #         max_min_avg_runtimes[-1][-1])
-        # print('\n')
-
-        # # Standard deviation of minimum average runtimes for each size bin.
-        # std_dev_min_avg_runtimes[-1].append(
-        #     [np.std(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Standard deviations of minimum average runtimes:', 
-        #         std_dev_min_avg_runtimes[-1][-1])
-        # print('\n')
-
-        # # Interquartile range of minimum average runtimes for each size bin.
-        # iqr_min_avg_runtimes[-1].append(
-        #     [iqr(min_avg_runtimes[-1][-1][i]) 
-        #     for i in range(num_size_bins)])
-        # print('Interquartile range of minimum average runtimes:', 
-        #         iqr_min_avg_runtimes[-1][-1])
-        # print('\n\n')
-
-        #print('Sizes:', sizes[-1])
-
-        # Median node evaluations per second relevant to function set.
-        # med_neps.append([(size*nfc)/med 
-        #     for size, med in zip(sizes[-1], med_min_avg_runtimes[-1])])
-        # print('Median node evaluations per second:', med_neps[-1])
-        # print('\n')
-
-
-        # Plot graph of median node evaluations per second, 
-        # for each function set.
-        # for i, (name, 
-        #     (num_functions, max_arity, max_depth, bin_size)) in enumerate(
-        #         function_sets.items()):
-
-        #     # Maximum program size for function set.
-        #     max_possible_size = get_max_size(max_arity, max_depth)
-
-        #     # Number of size bins.
-        #     num_size_bins = int(math.ceil(max_possible_size/bin_size))
-
-        #     # Index range for plot.
-        #     index = range(1, num_size_bins+1)
-
-            # Plot for function set.
-            # plt.plot(index, [size*nfc for size in sizes[i]])
-            # plt.plot(index, med_neps[i], label=f'Function set {name}')
-
-        # plt.xlabel('Size bin number')
-        # plt.ylabel('Median of node evaluations per second')
-        # plt.title('Median of node evaluations per second vs. size bin number')
-        # plt.legend(loc='upper left')
-
-        # plt.show()
-    

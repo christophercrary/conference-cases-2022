@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - boost
   - ceres-solver=2.0.*
   - cmake=3.19.*
   - cxxopts
@@ -10,6 +11,7 @@ dependencies:
   - eigen=3.4.*
   - fmt=7.1.*  
   - gcc
+  - gsl
   - gxx
   - ipykernel
   - openlibm
@@ -44,6 +46,7 @@ dependencies:
     - numpy==1.21.*
     - oauthlib==3.1.*
     - opt-einsum==3.3.*
+    - pathos==0.2.*
     - Pillow==8.4.*
     - protobuf==3.19.*
     - pyasn1==0.4.*

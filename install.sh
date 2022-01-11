@@ -1,8 +1,12 @@
+########################################################################
 # Manually install certain GP tools.
+########################################################################
 cd ./experiment/tools/
 
-cd ./operon
+# Install TensorGP.
+cd ./tensorgp
 bash ./install.sh
 
-cd ./tensorgp
+# Install Operon.
+cd ../operon
 bash ./install.sh

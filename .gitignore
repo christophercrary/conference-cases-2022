@@ -9,9 +9,13 @@ experiment/tools/tensorgp/tensorgp
 
 # Jupyter.
 **/.ipynb_checkpoints
+**/stats-**.ipynb
 
 # FPGA.
 *.mif
 
 # MacOS.
 **/.DS_Store
+
+# VSCode
+**.vscode

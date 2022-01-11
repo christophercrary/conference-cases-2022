@@ -26,8 +26,9 @@ click [here](https://dl.acm.org/doi/pdf/10.1145/3377929.3398099).
 ## Installation instructions
 
 The following has been verified via the CentOS operating system.
-It is likely that other Linux and Windows operating systems are 
-supported, but it is unlikely that MacOS is supported.
+It is likely that other Linux operating systems are 
+supported, and it is plausible that Windows operating systems
+are supported, but it is unlikely that MacOS is supported.
 
 ### Prerequisites
 - Ensure that some Conda package management system 
@@ -47,6 +48,13 @@ bash install.sh
 
 ## Profiling
 By default, the repository already contains some profiling results,
-scattered throughout the `experiment/results` directory.
+scattered throughout the `experiment/results` directory. (TODO: talk more about this.)
+
+To run the entire profiling suite, execute the following within a shell program, after having navigated to the repository directory within the shell:
+
+```
+cd experiments
+bash run.sh
+```
 
 **TODO: Finish**

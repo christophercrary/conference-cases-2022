@@ -1,4 +1,3 @@
-
 from inspect import isclass
 import math
 import os
@@ -8,6 +7,7 @@ import timeit
 
 from deap import gp
 import numpy as np
+from pathos.pools import ProcessPool
 from sklearn.metrics import r2_score
 
 
@@ -47,7 +47,7 @@ def generate_primitive_set(
     # Create a list of fixed ephemeral random constants.
     ephemeral_constants = []
     for i in range(num_constants):
-        ephemeral_constants.append(random.uniform(-1,1))
+        ephemeral_constants.append(random.uniform(1,2))
     
     # Add an ephemeral constant to the DEAP primitive set that
     # returns a random value from the `ephemeral_constants` list 
@@ -342,7 +342,7 @@ max_num_size_bins = max([int(math.ceil(
         zip(function_sets.items(), max_arities)])
 
 # Desired number of programs to be stored within each size bin.
-num_programs_per_size_bin = 1
+num_programs_per_size_bin = 2
 
 # Program initialization strategy.
 gen_strategy = 'grow'
@@ -400,7 +400,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
     # Preserve random constants.
     with open(
-        f'{root_dir}/{name}/constants.txt', 'w+') as f:
+        f'{root_dir}/{name}/constants.txt', 'w') as f:
         for constant in constant_names:
             f.write(f'{constant}\n')
 
@@ -429,9 +429,10 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
         min_size = i*bin_size+1
         max_size = max_possible_size if i==num_size_bins-1 else (i+1)*bin_size
 
-        for j in range(num_programs_per_size_bin):
-            # Generate `num_programs_per_size_bin` random programs
-            # for size bin `i`.
+        # Number of distinct random programs generated for size bin `i`.
+        j = 0
+
+        while j < num_programs_per_size_bin:
 
             program = generate_program(
                 gen_strategy, primitive_set, min_depth, max_depth,
@@ -479,6 +480,9 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
             # in the relevant bin.
             if ((num_programs < num_programs_per_size_bin) and
                 (programs.count(program_str) == 0)):
+
+                # Increment number of distinct random programs.
+                j += 1
 
                 # Extract some additional information about the program.
 
@@ -556,8 +560,7 @@ for name, (_, max_depth, bin_size) in function_sets.items():
         num_programs_per_size_bin) else False
 
     if (all_bins_are_filled):
-        with open(
-            f'{root_dir}/{name}/programs_deap.txt', 'w+') as f:
+        with open(f'{root_dir}/{name}/programs_deap.txt', 'w+') as f:
             for programs, *_ in program_dict[name]:
                 for program in programs:
                     f.write(f'{program}\n')
@@ -584,19 +587,25 @@ def evaluate(primitive_set, trees, inputs, target):
     target -- Tuple of target vectors.
     """
 
-    # Fitness scores.
-    fitness = []
-
-    for tree in trees:
-
-        # Transform the `PrimitiveTree` object into a callable function.
+    def _evaluate(tree):
+        # Transform `PrimitiveTree` object into a callable function.
         program = gp.compile(tree, primitive_set)
 
         # Calculate program outputs, i.e., estimations of target vector.
         estimated = tuple(program(*input) for input in inputs)
 
-        # Calculate fitness.
-        fitness.append(r2_score(target, estimated))
+        # Calculate and return fitness.
+        return r2_score(target, estimated)
+
+    # Calculate fitness scores for the set of trees in parallel, by way 
+    # of the `pathos.pools` module. Note that this module is utilized 
+    # instead of the standard `multiprocessing` module since the latter 
+    # does not readily support lambda functions. (All available logical 
+    # CPU cores are utilized by default. To utilize a different amount, 
+    # specify the `nodes` attribute via the `ProcessPool` constructor.
+    # This property can also be printed out, if need be.)
+    with ProcessPool() as pool:
+        fitness = pool.map(_evaluate, trees)
 
     return fitness
 
@@ -606,7 +615,7 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000)
+num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Random fitness case vector for maximum amount of fitness cases.
 inputs_ = np.array(
@@ -624,51 +633,20 @@ target_ = np.array([random.random() for _ in range(max(num_fitness_cases))])
 with open(f'{root_dir}/target.pkl', 'wb') as f:
     pickle.dump(target_, f)
 
+# Number of times in which the `timeit.repeat` function is
+# called, in order to generate a list of median average
+# runtimes.
+num_epochs = 1
+
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 3
+repeat = 1
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 2
-
-# Number of times in which the `timeit.repeat` function is
-# called, in order to generate a list of minimum average
-# runtimes.
-num_epochs = 3
-
-# # Programs sizes for each size bin, for each function set.
-# sizes = []
+number = 1
 
 # Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
 med_avg_runtimes = []
-
-# # Average of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# avg_min_avg_runtimes = []
-
-# # Median of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# med_min_avg_runtimes = []
-
-# # Minimum of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# min_min_avg_runtimes = []
-
-# # Maximum of *minimum average runtimes* for each size bin,
-# # for each number of fitness cases, for each function set.
-# max_min_avg_runtimes = []
-
-# # Standard deviation of *minimum average runtimes* for each size 
-# # bin, for each number of fitness cases, for each function set.
-# std_dev_min_avg_runtimes = []
-
-# # Interquartile range of *minimum average runtimes* for each size 
-# # bin, for each number of fitness cases, for each function set.
-# iqr_min_avg_runtimes = []
-
-# # Median node evaluations per second (NEPS) for each size bin,
-# # for each number of fitness cases, for each function set.
-# med_neps = []
 
 for name, (function_set, max_depth, bin_size) in function_sets.items():
     # For each function set...
@@ -717,10 +695,6 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
             # `PrimitiveTree` objects for size bin `i`.
             trees = tuple(primitive_trees[name][i])
-
-            # Size of trees. (All sizes are the same for a single bin.)
-            # (_, _, sizes_, *_) = program_dict[name][i]
-            # sizes[-1].append(sizes_[0])
 
             for _ in range(num_epochs):
                 # For each epoch...
