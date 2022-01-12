@@ -3,21 +3,22 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - boost
+  - boost=1.76.*
   - ceres-solver=2.0.*
   - cmake=3.19.*
-  - cxxopts
-  - doctest
+  - cxxopts=2.2.*
+  - cudnn=8.2.1=cuda11.3_0
+  - doctest=2.4.*
   - eigen=3.4.*
   - fmt=7.1.*  
-  - gcc
-  - git
-  - gsl
-  - gxx
-  - ipykernel
-  - make
-  - openlibm
-  - pip
+  - gcc=11.2.*
+  - git=2.34.*
+  - gsl=2.7
+  - gxx=11.2.*
+  - ipykernel=6.6.*
+  - make=4.3
+  - openlibm=0.8.*
+  - pip=21.3.*
   - pybind11=2.6.*
   - python=3.9.*
   - taskflow=3.1.*
@@ -30,7 +31,7 @@ dependencies:
     - certifi==2021.10.*
     - chardet==4.0.*
     - cycler==0.11.*
-    - deap
+    - deap==1.3.*
     - gast==0.4.*
     - google-auth==2.3.*
     - google-auth-oauthlib==0.4.*
@@ -61,11 +62,8 @@ dependencies:
     - rsa==4.8.*
     - scipy==1.7.*
     - six==1.16.*
-    - sklearn
-    - tensorboard==2.7.*
-    - tensorboard-plugin-wit==1.8.*
+    - sklearn=0.0
     - tensorflow==2.7.*
-    - tensorflow-estimator==2.7.*
     - termcolor==1.1.*
     - urllib3==1.26.*
     - Werkzeug==2.0.*

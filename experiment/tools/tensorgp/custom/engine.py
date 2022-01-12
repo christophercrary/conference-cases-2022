@@ -431,7 +431,9 @@ def set_device(device = '/gpu:0', debug_lvl = 1):
         with(tf.device(device)):
             a = tf.constant(2, dtype=tf.float32)
             if debug_lvl > 0:
-                if a == 2:
+                if device == '/gpu:0' and gpus_available == 0:
+                    print(f'GPU device `{device}` is not available.')
+                elif a == 2:
                     print(bcolors.OKGREEN + "Device " + device + " successfully tested, using this device. " , bcolors.ENDC)
                 else:
                     print(bcolors.FAIL + "Device " + device + " not working." , bcolors.ENDC)

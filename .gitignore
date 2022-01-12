@@ -3,6 +3,7 @@ experiment/tools/operon/operon
 experiment/tools/tensorgp/tensorgp
 **/build
 **/runs
+**.log
 
 # Python.
 **/__pycache__
