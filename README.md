@@ -32,7 +32,8 @@ are supported, but it is unlikely that MacOS is supported.
 
 ### Prerequisites
 - Ensure that some Conda package management system 
-(e.g., [Miniconda](https://docs.conda.io/en/latest/miniconda.html)) is installed on the relevant machine.
+(e.g., [Miniconda](https://docs.conda.io/en/latest/miniconda.html)) 
+is installed on the relevant machine.
 - Clone this repository onto the relevant machine.
 
 Upon cloning the repository, set up the relevant Conda enviroment
@@ -48,13 +49,19 @@ bash install.sh
 
 ## Profiling
 By default, the repository already contains some profiling results,
-scattered throughout the `experiment/results` directory. (TODO: talk more about this.)
+scattered throughout the `experiment/results` directory. 
+(TODO: talk more about this.)
 
-To run the entire profiling suite, execute the following within a shell program, after having navigated to the repository directory within the shell:
+After successfully completing installation, you may run the entire profiling
+suite by executing the following within a shell program, after having navigated 
+to the repository directory within the shell:
 
 ```
 cd experiments
 bash run.sh
 ```
+
+After the `run.sh` script fully executes, to view some relevant statistics,
+run the Jupyter Notebook given by the `results/stats.ipynb` file.
 
 **TODO: Finish**
