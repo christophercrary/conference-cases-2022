@@ -25,10 +25,10 @@ click [here](https://dl.acm.org/doi/pdf/10.1145/3377929.3398099).
 
 ## Installation instructions
 
-The following has been verified via the CentOS operating system.
-It is likely that other Linux operating systems are 
+The following has been verified via the Ubuntu and CentOS operating systems.
+It is likely that other Linux distributions are 
 supported, and it is plausible that Windows operating systems
-are supported, but it is unlikely that MacOS is supported.
+are supported, but it is unlikely that MacOS is readily supported.
 
 ### Prerequisites
 - Ensure that some Conda package management system 
@@ -57,11 +57,11 @@ suite by executing the following within a shell program, after having navigated
 to the repository directory within the shell:
 
 ```
-cd experiments
+cd experiment
 bash run.sh
 ```
 
 After the `run.sh` script fully executes, to view some relevant statistics,
-run the Jupyter Notebook given by the `results/stats.ipynb` file.
+fully run the Jupyter Notebook given by the `tools/stats.ipynb` file.
 
 **TODO: Finish**

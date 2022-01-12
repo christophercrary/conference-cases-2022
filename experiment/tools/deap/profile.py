@@ -566,7 +566,8 @@ for name, (_, max_depth, bin_size) in function_sets.items():
                     f.write(f'{program}\n')
 
 
-######################################################################## Profiling of program evaluation mechanism given by DEAP.
+######################################################################## 
+# Profiling of program evaluation mechanism given by DEAP.
 ########################################################################
 
 # Note that the following was not relegated to another 
@@ -636,10 +637,10 @@ with open(f'{root_dir}/target.pkl', 'wb') as f:
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of median average
 # runtimes.
-num_epochs = 3
+num_epochs = 1
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 3
+repeat = 1
 
 # Value for the `number` argument of the `timeit.repeat` method.
 number = 1
