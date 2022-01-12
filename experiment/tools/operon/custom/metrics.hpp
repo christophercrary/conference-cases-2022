@@ -8,19 +8,12 @@
 #include "contracts.hpp"
 
 #include <type_traits>
-#include <vstat/vstat.hpp>
+#include <vstat.hpp>
 
 namespace Operon {
 
 inline const auto SquaredError = [](auto a, auto b) { 
     auto e = a - b; 
-
-    // printf("A: %f\n", a);
-    // printf("B: %f\n", b);
-    // printf("ERR: %f\n", e);
-
-    // printf("SERR: %f\n", e * e);
-
     return e * e; };
 
 template<typename InputIt1, typename InputIt2>
@@ -40,12 +33,6 @@ inline auto CoefficientOfDetermination(InputIt1 begin1, InputIt1 end1, InputIt2 
     if (sst < eps) {
         return std::numeric_limits<double>::min();
     }
-
-    // printf("SSR: %f\n", ssr);
-    // printf("MEAN_Y: %f\n", meanY);
-    // printf("SST: %f\n", sst);
-    // printf("R2: %f\n", 1.0 - ssr / sst);
-
     return 1.0 - ssr / sst;
 }
 
@@ -57,11 +44,6 @@ inline auto MeanSquaredError(InputIt1 begin1, InputIt1 end1, InputIt2 begin2) no
     static_assert(std::is_arithmetic_v<V1>, "InputIt1: value_type must be arithmetic.");
     static_assert(std::is_arithmetic_v<V2>, "InputIt2: value_type must be arithmetic.");
     static_assert(std::is_same_v<V1, V2>, "The types must be the same");
-
-    auto mse = univariate::accumulate<V1>(begin1, end1, begin2, SquaredError).mean;
-    
-    // printf("MSE: %f\n", mse);
-
     return univariate::accumulate<V1>(begin1, end1, begin2, SquaredError).mean;
 }
 
@@ -271,13 +253,15 @@ struct R2 {
     template<typename T>
     inline auto operator()(Operon::Span<T const> x, Operon::Span<T const> y) const noexcept -> double
     {
-        return -CoefficientOfDetermination(x, y);
+        return CoefficientOfDetermination(x, y);
+        // return -CoefficientOfDetermination(x, y);
     }
 
     template<typename InputIt1, typename InputIt2>
     inline auto operator()(InputIt1 begin1, InputIt1 end1, InputIt2 begin2) const noexcept -> double
     {
-        return -CoefficientOfDetermination(begin1, end1, begin2);
+        return CoefficientOfDetermination(begin1, end1, begin2);
+        // return -CoefficientOfDetermination(begin1, end1, begin2);
     }
 };
 

@@ -94,7 +94,7 @@ function_sets = {
 }
 
 # Number of programs per size bin.
-num_programs_per_size_bin = 2
+num_programs_per_size_bin = 1
 
 # Numbers of fitness cases.
 num_fitness_cases = (10, 100, 1000, 10000, 100000)
@@ -111,16 +111,16 @@ with open(f'{root_dir}/target.pkl', 'rb') as f:
 inputs_ = np.array(inputs_)
 target_ = np.array(target_)
 
+# Number of times in which the `timeit.repeat` function is
+# called, in order to generate a list of median average
+# runtimes.
+num_epochs = 3
+
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 1
+repeat = 3
 
 # Value for the `number` argument of the `timeit.repeat` method.
 number = 1
-
-# Number of times in which the `timeit.repeat` function is
-# called, in order to generate a list of minimum average
-# runtimes.
-num_epochs = 1
 
 # Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.

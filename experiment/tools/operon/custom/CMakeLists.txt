@@ -180,8 +180,8 @@ FetchContent_Declare(
 
 FetchContent_Declare(
     vstat
-    GIT_REPOSITORY https://github.com/foolnotion/vstat
-    GIT_TAG main
+    GIT_REPOSITORY https://github.com/heal-research/vstat
+    GIT_TAG 1ae255167708916cf1f9e494769ac978fdffd888
     DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/vstat
     SOURCE_DIR ${DOWNLOAD_DIR}
 )
@@ -211,8 +211,7 @@ set(THIRDPARTY_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/thirdparty/vcl/
     ${PROJECT_SOURCE_DIR}/thirdparty/vcl/vectorclass
     ${xxhash_SOURCE_DIR}
-    ${vstat_SOURCE_DIR}/include
-    ${vstat_SOURCE_DIR}/include/vstat
+    ${PROJECT_SOURCE_DIR}/build/_deps/vstat-src/include
 )
 
 # populate optional content

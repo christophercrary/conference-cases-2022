@@ -304,10 +304,10 @@ void get_results(
 
     // Number of times that nanobench is independently executed, 
     // in order to generate a list of median average runtimes.
-    const int NB_NUM_GENERATIONS = 1;
+    const int NB_NUM_GENERATIONS = 3;
 
     // Number of epochs within a single nanobench run.
-    const int NB_NUM_EPOCHS = 1;
+    const int NB_NUM_EPOCHS = 3;
 
     // Number of iterations within a single nanobench epoch.
     const int NB_NUM_ITERATIONS = 1;
@@ -347,7 +347,7 @@ void get_results(
     for(int bin = 0; bin < num_size_bins; bin++)
     {
         // For size bin `bin`...
-        std::cout << "Size bin `" << bin << "`\n"; 
+        std::cout << "Size bin `" << bin << "`...\n"; 
 
         // Vector to contain program strings for size bin `i`.
         std::vector<std::string> *input_strs = new std::vector<std::string>();
@@ -447,9 +447,7 @@ void get_results(
             Interpreter interpreter;
             test(
                 outer_b, "R2", 
-                // R2Evaluator(problem, interpreter),
-                // Operon::Evaluator<Operon::R2, true>(problem, interpreter),
-                Operon::Evaluator<Operon::R2, true>(problem, interpreter),
+                Operon::Evaluator<Operon::R2, false>(problem, interpreter),
                 NB_NUM_EPOCHS, NB_NUM_ITERATIONS);
         }
         
@@ -492,7 +490,7 @@ void get_results(
 
         const int NUM_FUNCTION_SETS = 3;
 
-        const int NUM_PROGRAMS_PER_BIN = 2;
+        const int NUM_PROGRAMS_PER_BIN = 1;
         
         std::string fitness_cases[NUM_FITNESS_CASE_AMOUNTS] = 
             {"10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv"};
