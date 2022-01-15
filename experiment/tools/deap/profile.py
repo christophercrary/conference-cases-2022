@@ -342,7 +342,7 @@ max_num_size_bins = max([int(math.ceil(
         zip(function_sets.items(), max_arities)])
 
 # Desired number of programs to be stored within each size bin.
-num_programs_per_size_bin = 1
+num_programs_per_size_bin = 128
 
 # Program initialization strategy.
 gen_strategy = 'grow'
@@ -637,13 +637,13 @@ with open(f'{root_dir}/target.pkl', 'wb') as f:
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of median average
 # runtimes.
-num_epochs = 1
+num_epochs = 10
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 1
+repeat = 3
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 1
+number = 2
 
 # Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
@@ -694,7 +694,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
         for i in range(num_size_bins):
             # For each size bin...
-            print(f'Size bin `{i}`...')
+            print(f'Size bin `{i+1}`...')
 
             # `PrimitiveTree` objects for size bin `i`.
             trees = tuple(primitive_trees[name][i])

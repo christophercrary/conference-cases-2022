@@ -498,7 +498,7 @@ if(doctest_FOUND AND BUILD_TESTS)
     if(MSVC)
         target_compile_options(operon-test PRIVATE /W4 "$<$<CONFIG:Release>:/O3;/std:c++latest>")
     else()
-        target_compile_options(operon-test PRIVATE ${MYFLAGS} "$<$<CONFIG:Debug>:-g>$<$<CONFIG:Release>:-O3;-g;-march=native>")
+        target_compile_options(operon-test PRIVATE ${MYFLAGS} "$<$<CONFIG:Debug>:-g>$<$<CONFIG:Release>:-O3;-march=native;-fno-math-errno>")
     endif(MSVC)
     target_link_libraries(operon-test PRIVATE operon fmt::fmt ${OPENLIBM} ${MALLOC_LIB} Ceres::ceres doctest::doctest)
     target_include_directories(

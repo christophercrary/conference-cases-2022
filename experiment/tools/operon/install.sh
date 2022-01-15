@@ -22,7 +22,7 @@ export CC=gcc
 export CXX=g++
 
 # Build Operon.
-cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_OPENLIBM=ON -DCERES_TINY_SOLVER=ON -DUSE_SINGLE_PRECISION=ON -DFASTFLOAT_TEST=ON -DBUILD_TESTS=ON
+SOURCE_DATE_EPOCH=`date +%s` cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_OPENLIBM=ON -DCERES_TINY_SOLVER=ON -DUSE_SINGLE_PRECISION=ON -DFASTFLOAT_TEST=ON -DBUILD_TESTS=ON -DUSE_JEMALLOC=ON
 
 # Utilize some custom files for the purposes of profiling.
 \cp ../../custom/node.hpp ../include/operon/core

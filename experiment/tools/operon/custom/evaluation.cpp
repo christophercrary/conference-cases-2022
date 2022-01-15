@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "core/dataset.hpp"
+#include "core/version.hpp"
 #include "interpreter/interpreter.hpp"
 #include "core/pset.hpp"
 #include "operators/creator.hpp"
@@ -304,13 +305,13 @@ void get_results(
 
     // Number of times that nanobench is independently executed, 
     // in order to generate a list of median average runtimes.
-    const int NB_NUM_GENERATIONS = 1;
+    const int NB_NUM_GENERATIONS = 10;
 
     // Number of epochs within a single nanobench run.
-    const int NB_NUM_EPOCHS = 1;
+    const int NB_NUM_EPOCHS = 3;
 
     // Number of iterations within a single nanobench epoch.
-    const int NB_NUM_ITERATIONS = 1;
+    const int NB_NUM_ITERATIONS = 1000;
 
     // File path to the relevant program strings.
     std::string prog_path = "../../../../results/programs/" + 
@@ -490,15 +491,21 @@ void get_results(
 
         const int NUM_FUNCTION_SETS = 3;
 
-        const int NUM_PROGRAMS_PER_BIN = 1;
+        const int NUM_PROGRAMS_PER_BIN = 128;
         
         std::string fitness_cases[NUM_FITNESS_CASE_AMOUNTS] = 
             {"10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv"};
+
+        std::string fitness_cases_names[NUM_FITNESS_CASE_AMOUNTS] =
+            {"10", "100", "1000", "10000", "100000"};
 
         std::string function_sets[NUM_FUNCTION_SETS] = 
             {"nicolau_a", "nicolau_b", "nicolau_c"};
 
         int size_bins[NUM_FUNCTION_SETS] = {128, 63, 63};
+
+        std::cout << "\n\nOperon build information: " << Operon::Version() <<
+            "\n\n";
 
         for(int i = 0; i < NUM_FUNCTION_SETS; i++)
         {
@@ -512,6 +519,9 @@ void get_results(
             for(int j = 0; j < NUM_FITNESS_CASE_AMOUNTS; j++)
             {
                 // For each number of fitness cases...
+                std::cout << "\nNumber of fitness cases: " << 
+                    fitness_cases_names[j] << "\n\n"; 
+
                 get_results(
                     function_sets[i], fitness_cases[j], 
                     NUM_PROGRAMS_PER_BIN, size_bins[i], out_file);       
