@@ -40,10 +40,10 @@ namespace Test {
         const int NB_NUM_GENERATIONS = 5;
 
         // Number of epochs within a single nanobench run.
-        const int NB_NUM_EPOCHS = 10;
+        const int NB_NUM_EPOCHS = 11;
 
         // Number of iterations within a single nanobench epoch.
-        const int NB_NUM_ITERATIONS = 10000;
+        const int NB_NUM_ITERATIONS = 5000;
 
         // File path to the relevant program strings.
         std::string prog_path = "../../../../results/programs/" + 
