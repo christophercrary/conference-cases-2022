@@ -36,7 +36,7 @@ are supported, but it is unlikely that MacOS is readily supported.
 is installed on the relevant machine.
 - Clone this repository onto the relevant machine.
 
-Upon cloning the repository, set up the relevant Conda enviroment
+Upon cloning the repository, set up the relevant Conda environment
 and install the relevant tools by executing the following within
 a shell program, after having navigated to the repository directory
 within the shell:

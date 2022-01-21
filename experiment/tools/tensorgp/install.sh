@@ -8,7 +8,6 @@ git clone https://github.com/AwardOfSky/TensorGP.git tensorgp
 cd tensorgp
 
 # Check out an appropriate commit.
-# git checkout 055c9299bc1978de3153e151dde9ad905a0f7a65
 git checkout d75fb60a74f1965d9115bbef083e3762d76fa48c
 
 # Update the core `engine.py` file within TensorGP 

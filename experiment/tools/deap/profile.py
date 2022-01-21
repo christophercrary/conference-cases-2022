@@ -1,3 +1,4 @@
+import datetime as dt
 from inspect import isclass
 import math
 import os
@@ -326,9 +327,9 @@ opcode_width = 8
 
 # Function sets.
 function_sets = {
-    'nicolau_a': (nicolau_a, 7, 2),
-    'nicolau_b': (nicolau_b, 5, 1),
-    'nicolau_c': (nicolau_c, 5, 1)
+    'nicolau_a': (nicolau_a, 7, 8),
+    'nicolau_b': (nicolau_b, 5, 2),
+    'nicolau_c': (nicolau_c, 5, 2)
 }
 
 # Maximum arity for each function set.
@@ -451,9 +452,6 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
             # A tree representation of the program.
             program = gp.PrimitiveTree(program)
 
-            # Preserve `PrimitiveTree` object.
-            primitive_trees[name][i].append(program)
-
             # String representation of program.
             program_str = str(program)
 
@@ -473,16 +471,16 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
             num_programs = len(programs)
 
             # Write the newly generated program and its relevant 
-            # information to the dictionary if the dictionary does 
-            # not already contain `num_programs_per_size_bin` 
-            # entries and if this new program is syntactically (not 
-            # semantically) distinct from all other programs stored 
-            # in the relevant bin.
-            if ((num_programs < num_programs_per_size_bin) and
-                (programs.count(program_str) == 0)):
+            # information to the dictionary if this new program is 
+            # syntactically (not semantically) distinct from all 
+            # other programs stored in the relevant bin.
+            if programs.count(program_str) == 0:
 
                 # Increment number of distinct random programs.
                 j += 1
+
+                # Preserve `PrimitiveTree` object.
+                primitive_trees[name][i].append(program)
 
                 # Extract some additional information about the program.
 
@@ -588,7 +586,7 @@ def evaluate(primitive_set, trees, inputs, target):
     target -- Tuple of target vectors.
     """
 
-    def _evaluate(tree):
+    def evaluate_(tree):
         # Transform `PrimitiveTree` object into a callable function.
         program = gp.compile(tree, primitive_set)
 
@@ -605,8 +603,11 @@ def evaluate(primitive_set, trees, inputs, target):
     # CPU cores are utilized by default. To utilize a different amount, 
     # specify the `nodes` attribute via the `ProcessPool` constructor.
     # This property can also be printed out, if need be.)
-    with ProcessPool() as pool:
-        fitness = pool.map(_evaluate, trees)
+    fitness = ProcessPool().map(evaluate_, trees)
+
+    # fitness = []
+    # for tree in trees:
+    #     fitness.append(evaluate_(tree))
 
     return fitness
 
@@ -637,7 +638,7 @@ with open(f'{root_dir}/target.pkl', 'wb') as f:
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of median average
 # runtimes.
-num_epochs = 10
+num_epochs = 3
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
 repeat = 3
@@ -694,7 +695,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
         for i in range(num_size_bins):
             # For each size bin...
-            print(f'Size bin `{i+1}`...')
+            print(f'({dt.datetime.now().ctime()}) Size bin `{i+1}`...')
 
             # `PrimitiveTree` objects for size bin `i`.
             trees = tuple(primitive_trees[name][i])

@@ -1,3 +1,4 @@
+import datetime as dt
 import math
 import os
 import pickle
@@ -88,9 +89,9 @@ functions = {'add', 'aq', 'exp', 'log', 'mul',
 
 # Dictionary for particular function set criteria.
 function_sets = {
-    'nicolau_a': (4, 2, 7, 2),
-    'nicolau_b': (6, 2, 5, 1),
-    'nicolau_c': (9, 2, 5, 1)
+    'nicolau_a': (4, 2, 7, 8),
+    'nicolau_b': (6, 2, 5, 2),
+    'nicolau_c': (9, 2, 5, 2)
 }
 
 # Number of programs per size bin.
@@ -114,7 +115,7 @@ target_ = np.array(target_)
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of median average
 # runtimes.
-num_epochs = 10
+num_epochs = 5
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
 repeat = 3
@@ -200,7 +201,7 @@ for device in devices:
 
             for i in range(num_size_bins):
                 # For each size bin, calculate the relevant statistics.
-                print(f'Size bin `{i+1}`...')
+                print(f'({dt.datetime.now().ctime()}) Size bin `{i+1}`...')
 
                 # Population relevant to the current size bin.
                 population, *_ = engine.generate_pop_from_expr(

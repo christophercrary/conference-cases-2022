@@ -81,7 +81,7 @@ for name in names:
         constants.append(f.read().splitlines())
 
 # Tuples for maximum program size and 'size bin' size.
-sizes = ((255, 2), (63, 1), (63, 1))
+sizes = ((255, 8), (63, 2), (63, 2))
 
 # Numbers of fitness cases.
 num_fitness_cases = (10, 100, 1000, 10000, 100000)

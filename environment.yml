@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - bash=5.0.*
   - boost=1.76.*
   - ceres-solver=2.0.*
   - cmake=3.19.*
