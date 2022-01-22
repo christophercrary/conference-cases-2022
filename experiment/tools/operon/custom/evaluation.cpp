@@ -43,7 +43,7 @@ namespace Test {
         const int NB_NUM_EPOCHS = 11;
 
         // Number of iterations within a single nanobench epoch.
-        const int NB_NUM_ITERATIONS = 5000;
+        const int NB_NUM_ITERATIONS = 10000;
 
         // File path to the relevant program strings.
         std::string prog_path = "../../../../results/programs/" + 
@@ -147,8 +147,21 @@ namespace Test {
                 });
             };
 
-            for (int gen = 0; gen < NB_NUM_GENERATIONS; gen++) {
-                test(outer_b, "R2", NB_NUM_EPOCHS, NB_NUM_ITERATIONS);
+            int num_generations = NB_NUM_GENERATIONS;
+            int num_epochs = NB_NUM_EPOCHS;
+
+            // Scale number of iterations for `nanobench` such
+            // that lower size bins have more iterations and
+            // higher size bins have less iterations.
+            int num_iterations = (NB_NUM_ITERATIONS * (num_size_bins-bin))
+                / (num_size_bins);
+
+            std::cout << "`num_generations`: " << num_generations;
+            std::cout << "`num_epochs`: " << num_epochs;
+            std::cout << "`num_iterations`: " << num_iterations;
+
+            for (int gen = 0; gen < num_generations; gen++) {
+                test(outer_b, "R2", num_epochs, num_iterations);
             }
 
             // For the relevant size bin, print out a list of
