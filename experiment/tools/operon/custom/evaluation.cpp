@@ -146,6 +146,11 @@ namespace Test {
                     return sum;
                 });
             };
+            
+            const int max_fc_factor = 5;
+            int fc_factor = (int)(log10((double)(range.Size())));
+            std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
+            std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
 
             int num_generations = NB_NUM_GENERATIONS;
             int num_epochs = NB_NUM_EPOCHS;
@@ -153,12 +158,13 @@ namespace Test {
             // Scale number of iterations for `nanobench` such
             // that lower size bins have more iterations and
             // higher size bins have less iterations.
-            int num_iterations = (NB_NUM_ITERATIONS * (num_size_bins-bin))
-                / (num_size_bins);
+            int num_iterations = (NB_NUM_ITERATIONS * (num_size_bins-bin)
+                * (max_fc_factor - (fc_factor - 1)))
+                / (num_size_bins) / (max_fc_factor);
 
             std::cout << "`num_generations`: " << num_generations;
-            std::cout << "`num_epochs`: " << num_epochs;
-            std::cout << "`num_iterations`: " << num_iterations;
+            std::cout << "\n`num_epochs`: " << num_epochs;
+            std::cout << "\n`num_iterations`: " << num_iterations << std::endl;
 
             for (int gen = 0; gen < num_generations; gen++) {
                 test(outer_b, "R2", num_epochs, num_iterations);
