@@ -43,7 +43,7 @@ namespace Test {
         const int NB_NUM_EPOCHS = 11;
 
         // Number of iterations within a single nanobench epoch.
-        const int NB_NUM_ITERATIONS = 10000;
+        const int NB_NUM_ITERATIONS = 7500;
 
         // File path to the relevant program strings.
         std::string prog_path = "../../../../results/programs/" + 
@@ -149,21 +149,35 @@ namespace Test {
             
             const int max_fc_factor = 5;
             int fc_factor = (int)(log10((double)(range.Size())));
-            std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
-            std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
+            // std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
+            // std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
 
             int num_generations = NB_NUM_GENERATIONS;
             int num_epochs = NB_NUM_EPOCHS;
 
             // Scale number of iterations for `nanobench` such
             // that lower size bins have more iterations and
-            // higher size bins have less iterations.
+            // higher size bins have less iterations. Also take
+            // into account the total number of fitness cases.
+            // (Linear scaling is chosen for the former, and
+            // nonlinear scaling is chosen for the latter.)
             int num_iterations = (NB_NUM_ITERATIONS * (num_size_bins-bin)
-                * (max_fc_factor - (fc_factor - 1)))
-                / (num_size_bins) / (max_fc_factor);
+                * (int)(pow((double)(max_fc_factor - (fc_factor - 1)), 2.0)))
+                / (num_size_bins) / (int)(pow((double)max_fc_factor, 2.0));
 
-            std::cout << "`num_generations`: " << num_generations;
-            std::cout << "\n`num_epochs`: " << num_epochs;
+            // Enforce a lower bound for number of iterations 
+            // when scaling. This lower bound is made to simply 
+            // depend on the total number of fitness cases.
+            int min_num_iterations = (2500 * 
+                (int)pow((double)(max_fc_factor - (fc_factor - 1)), 2.0))
+                / (int)(pow((double)max_fc_factor, 2.0));
+
+            if (num_iterations < min_num_iterations) {
+                num_iterations = min_num_iterations;
+            }
+
+            // std::cout << "`num_generations`: " << num_generations;
+            // std::cout << "\n`num_epochs`: " << num_epochs;
             std::cout << "\n`num_iterations`: " << num_iterations << std::endl;
 
             for (int gen = 0; gen < num_generations; gen++) {
@@ -183,7 +197,8 @@ namespace Test {
 
             for (int i = 0; i < NB_NUM_GENERATIONS; i++) {
                 // Retrieve median runtime for each "generation".
-                double median = results[i].median(nb::Result::Measure::elapsed);
+                double median = results[i].median(
+                    nb::Result::Measure::elapsed);
 
                 // Write median runtime in terms of microseconds,
                 // to utilize more significant digits.
@@ -208,10 +223,12 @@ namespace Test {
         const int NUM_PROGRAMS_PER_BIN = 128;
 
         std::string fitness_cases[NUM_FITNESS_CASE_AMOUNTS] = { 
-            "10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv" };
+            "1000.csv" };
+            // "10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv" };
 
         std::string fitness_cases_names[NUM_FITNESS_CASE_AMOUNTS] = { 
-            "10", "100", "1000", "10000", "100000" };
+            "1000" };
+            // "10", "100", "1000", "10000", "100000" };
 
         std::string function_sets[NUM_FUNCTION_SETS] = { 
             "nicolau_a", "nicolau_b", "nicolau_c" };

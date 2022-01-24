@@ -4,6 +4,7 @@ experiment/tools/tensorgp/tensorgp
 **/build
 **/runs
 **.log
+**/.nfs*
 
 # Python.
 **/__pycache__
