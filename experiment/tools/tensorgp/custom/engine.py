@@ -255,8 +255,8 @@ def old_tf_rmse(child1, child2):
 
 @tf.function
 def tf_rmse(child1, child2):
-    child1 = tf.scalar_mul(1/127.5, child1)
-    child2 = tf.scalar_mul(1/127.5, child2)
+    # child1 = tf.scalar_mul(1/127.5, child1)
+    # child2 = tf.scalar_mul(1/127.5, child2)
     return tf.sqrt(tf.reduce_mean(tf.square(child1 - child2)))
 
 @tf.function

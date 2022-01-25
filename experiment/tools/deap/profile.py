@@ -9,7 +9,7 @@ import timeit
 from deap import gp
 import numpy as np
 from pathos.pools import ProcessPool
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 # Useful directory path.
@@ -594,7 +594,7 @@ def evaluate(primitive_set, trees, inputs, target):
         estimated = tuple(program(*input) for input in inputs)
 
         # Calculate and return fitness.
-        return r2_score(target, estimated)
+        return math.sqrt(mean_squared_error(target, estimated))
 
     # Calculate fitness scores for the set of trees in parallel, by way 
     # of the `pathos.pools` module. Note that this module is utilized 

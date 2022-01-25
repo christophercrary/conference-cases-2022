@@ -59,7 +59,8 @@ def r2(**kwargs):
         # print(f'Tensors[{i}]:', tensors[i])
         # print(f'Target:', target)
 
-        fit = tf_r2(target, tensors[i]).numpy()
+        # fit = tf_r2(target, tensors[i]).numpy()
+        fit = tf_rmse(target, tensors[i]).numpy()
         # print('Fitness:', fit)
 
         if fit > max_fit:

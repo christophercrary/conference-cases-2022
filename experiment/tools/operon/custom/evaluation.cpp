@@ -90,7 +90,7 @@ namespace Test {
         for (auto& s : slots) { s.resize(range.Size()); }
 
         Operon::Interpreter interpreter;
-        Operon::Evaluator<Operon::R2, false> evaluator(problem, interpreter);
+        Operon::Evaluator<Operon::RMSE, false> evaluator(problem, interpreter);
 
         for (int bin = 0; bin < num_size_bins; bin++) {
             // For size bin `bin`...
@@ -149,8 +149,8 @@ namespace Test {
             
             const int max_fc_factor = 5;
             int fc_factor = (int)(log10((double)(range.Size())));
-            // std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
-            // std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
+            std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
+            std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
 
             int num_generations = NB_NUM_GENERATIONS;
             int num_epochs = NB_NUM_EPOCHS;
@@ -181,7 +181,7 @@ namespace Test {
             std::cout << "\n`num_iterations`: " << num_iterations << std::endl;
 
             for (int gen = 0; gen < num_generations; gen++) {
-                test(outer_b, "R2", num_epochs, num_iterations);
+                test(outer_b, "RMSE", num_epochs, num_iterations);
             }
 
             // For the relevant size bin, print out a list of
@@ -223,12 +223,12 @@ namespace Test {
         const int NUM_PROGRAMS_PER_BIN = 128;
 
         std::string fitness_cases[NUM_FITNESS_CASE_AMOUNTS] = { 
-            "1000.csv" };
-            // "10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv" };
+            // "1000.csv" };
+            "10.csv", "100.csv", "1000.csv", "10000.csv", "100000.csv" };
 
         std::string fitness_cases_names[NUM_FITNESS_CASE_AMOUNTS] = { 
-            "1000" };
-            // "10", "100", "1000", "10000", "100000" };
+            // "1000" };
+            "10", "100", "1000", "10000", "100000" };
 
         std::string function_sets[NUM_FUNCTION_SETS] = { 
             "nicolau_a", "nicolau_b", "nicolau_c" };
