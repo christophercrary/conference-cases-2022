@@ -3,6 +3,7 @@ from inspect import isclass
 import math
 import os
 import pickle
+import pygraphviz as pgv
 import random
 import timeit
 
@@ -250,6 +251,110 @@ def generate_program(gen_strategy, primitive_set, min_depth, max_depth,
             max_size, desired_trait)
 
 
+# def generate_program(pset, d_max, s_desired):
+#     """Attempt to generate a program of the specified size.
+    
+#     The program is generated based on the given primitive set 
+#     and maximum depth constraints. Different tree shapes are
+#     randomly sampled based on the `terminalRatio` attribute
+#     of the primitive set.
+
+#     It is not guaranteed that a program of the specified size
+#     will be found, even if one exists in theory.
+
+#     Keyword arguments:
+#     pset -- Primitive set, of type `deap.gp.PrimitiveSet`.
+#     d_max -- Maximum allowable depth of program.
+#     s_desired -- Desired size of program.
+#     """
+#     program = []  # Prefix representation of program.
+#     depth = 0     # Depth of program.
+#     size = 1      # Size of program.
+#     stack = [0]   # Stack of depths for nodes outstanding.
+
+#     while len(stack) != 0:
+#         # Depth of the next relevant node.
+#         d = stack.pop()
+
+#         # Functions with an arity that is not too large.
+#         fn = [f for f in pset.primitives[pset.ret] if size+f.arity <= s_desired]
+
+#         # Maximum arity of the above functions.
+#         a_max = 0 if fn == [] else max([f.arity for f in fn])
+
+#         # Determine which of the above functions have an arity 
+#         # that is not too small.
+#         temp = []
+#         for f in fn:
+#             # Maximum possible size of the subprogram rooted at the 
+#             # current node, excluding this node, if the current 
+#             # node is given to be `f`. (For simplicity, it can be 
+#             # assumed that `a_max` is valid when choosing children 
+#             # nodes.)
+#             s = f.arity * get_max_size(a_max, d_max-(d+1))
+
+#             # Maximum possible size of the overall program if the 
+#             # relevant node under consideration is chosen to be 
+#             # the function `f`. This maximum size would occur if 
+#             # every outstanding node within the current stack is 
+#             # made to be the root of a full `a_max`-ary subtree 
+#             # such that the sum of (i) the depth of this subtree 
+#             # and (ii) the depth of the root node within the 
+#             # overall program is equal to `d_max`. (Again, for 
+#             # simplicity, we assume that `a_max` is valid for 
+#             # choosing children nodes.)
+#             s_max = (size + s if stack == [] else size + s + sum(
+#                 [get_max_size(a_max, d_max-d)-1 for d in stack]))
+
+#             if s_max >= s_desired:
+#                 temp.append(f)
+
+#         # Functions with an arity that is not too small.
+#         fn = temp
+#         a_max = 0 if fn == [] else max([f.arity for f in fn])
+
+#         if fn == [] and size < s_desired:
+#             # Invalid program.
+#             return None
+
+#         # Maximum possible program size if the node currently
+#         # under consideration is chosen to be a terminal.
+#         s_max = (size if stack == [] or fn == [] else 
+#             size + sum([get_max_size(a_max, d_max-d)-1 for d in stack]))
+
+#         # Boolean to determine if the current node should be a terminal.
+#         choose_terminal = (
+#             (fn == []) or (d == d_max) or (size == s_desired) or (
+#             random.random() < pset.terminalRatio and s_max >= s_desired))
+
+#         if choose_terminal:
+#             # A random terminal node is to be chosen.
+#             terminal = random.choice(pset.terminals[pset.ret])
+#             terminal = terminal() if isclass(terminal) else terminal
+#             program.append(terminal)
+#         else:
+#             # A random (valid) function node is to be chosen.
+#             f = random.choice(fn)
+#             program.append(f)
+
+#             for _ in range(f.arity):
+#                 # Add a stack element for each function argument.
+#                 stack.append(d + 1)
+
+#             if (d + 1) > depth:
+#                 # Update overall depth.
+#                 depth += 1
+
+#             # Update program size.
+#             size += f.arity
+
+#     if size != s_desired:
+#         # Invalid program.
+#         return None
+#     else:
+#         return program
+
+
 ########################################################################
 # Some user-defined GP functions.
 ########################################################################
@@ -314,7 +419,7 @@ nicolau_b = [
   [sin, 1], [tanh, 1], [add, 2], [sub, 2], [mul, 2], [aq, 2]]
 
 nicolau_c = [
-  [exp, 1], [log, 1], [sqrt, 1], [sin, 1], [tanh, 1],
+  [sin, 1], [tanh, 1], [exp, 1], [log, 1], [sqrt, 1], 
   [add, 2], [sub, 2], [mul, 2], [aq, 2]]
 
 
@@ -438,16 +543,31 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
             program = generate_program(
                 gen_strategy, primitive_set, min_depth, max_depth,
                 min_size, max_size, desired_trait)
+            # program = generate_program(
+            #     primitive_set, max_depth, random.randint(min_size, max_size))
 
             if program is None: 
                 continue
 
             # Extract some information about the program.
 
-            program_nodes, _, program_node_labels = gp.graph(program)
+            nodes, edges, labels = gp.graph(program)
+
+            # if (i == 31 and j == 2):
+            #     # Graphviz representation of particular program.
+            #     g = pgv.AGraph()
+            #     g.add_nodes_from(nodes)
+            #     g.add_edges_from(edges)
+            #     g.layout(prog='dot')
+
+            #     for i in nodes:
+            #         n = g.get_node(i)
+            #         n.attr["label"] = labels[i]
+
+            #     g.draw(f'{root_dir}/../graphics/tree.pdf')
 
             # Size of program.
-            size = program_nodes[-1]+1
+            size = nodes[-1]+1
 
             # A tree representation of the program.
             program = gp.PrimitiveTree(program)
@@ -490,9 +610,9 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
                 variable_count = [0]*(num_variables)
                 constant_count = [0]*(num_constants)
                 
-                for node in program_nodes:
+                for node in nodes:
 
-                    node_name = program_node_labels[node]
+                    node_name = labels[node]
 
                     if (node_name in function_names):
                         index = function_names.index(node_name)
@@ -603,11 +723,11 @@ def evaluate(primitive_set, trees, inputs, target):
     # CPU cores are utilized by default. To utilize a different amount, 
     # specify the `nodes` attribute via the `ProcessPool` constructor.
     # This property can also be printed out, if need be.)
-    fitness = ProcessPool().map(evaluate_, trees)
+    # fitness = ProcessPool().map(evaluate_, trees)
 
-    # fitness = []
-    # for tree in trees:
-    #     fitness.append(evaluate_(tree))
+    fitness = []
+    for tree in trees:
+        fitness.append(evaluate_(tree))
 
     return fitness
 
@@ -617,6 +737,7 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
+# num_fitness_cases = (10,)
 num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Random fitness case vector for maximum amount of fitness cases.
@@ -638,13 +759,13 @@ with open(f'{root_dir}/target.pkl', 'wb') as f:
 # Number of times in which the `timeit.repeat` function is
 # called, in order to generate a list of median average
 # runtimes.
-num_epochs = 3
+num_epochs = 1
 
 # Value for the `repeat` argument of the `timeit.repeat` method.
-repeat = 3
+repeat = 1
 
 # Value for the `number` argument of the `timeit.repeat` method.
-number = 2
+number = 1
 
 # Median average runtimes for programs within each size bin,
 # for each number of fitness cases, for each function set.
