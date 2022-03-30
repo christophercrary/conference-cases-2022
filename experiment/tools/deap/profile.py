@@ -5,6 +5,7 @@ import os
 import pickle
 import pygraphviz as pgv
 import random
+import sys
 import timeit
 
 from deap import gp
@@ -374,7 +375,10 @@ def aq(x1, x2):
 
 def exp(x): 
     """Return result of exponentiation, base `e`."""
-    return math.exp(x)
+    try:
+        return math.exp(x)
+    except OverflowError:
+        return float("inf")
 
 def log(x):
     """Return result of protected logarithm, base `e`."""
@@ -434,7 +438,7 @@ opcode_width = 8
 function_sets = {
     'nicolau_a': (nicolau_a, 7, 8),
     'nicolau_b': (nicolau_b, 5, 2),
-    'nicolau_c': (nicolau_c, 5, 2)
+    'nicolau_c': (nicolau_c, 4, 1)
 }
 
 # Maximum arity for each function set.
@@ -553,7 +557,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
             nodes, edges, labels = gp.graph(program)
 
-            # if (i == 31 and j == 2):
+            # if (i == 1 and j == 10):
             #     # Graphviz representation of particular program.
             #     g = pgv.AGraph()
             #     g.add_nodes_from(nodes)
@@ -692,6 +696,9 @@ for name, (_, max_depth, bin_size) in function_sets.items():
 # script, since it was seemingly not trivial to preserve 
 # the primitive sets and namespaces created by DEAP.
 
+# Fitness outputs.
+
+
 def evaluate(primitive_set, trees, inputs, target):
     """Return list of fitness scores for programs.
     
@@ -707,14 +714,17 @@ def evaluate(primitive_set, trees, inputs, target):
     """
 
     def evaluate_(tree):
-        # Transform `PrimitiveTree` object into a callable function.
-        program = gp.compile(tree, primitive_set)
+        try:
+            # Transform `PrimitiveTree` object into a callable function.
+            program = gp.compile(tree, primitive_set)
 
-        # Calculate program outputs, i.e., estimations of target vector.
-        estimated = tuple(program(*input) for input in inputs)
+            # Calculate program outputs, i.e., estimations of target vector.
+            estimated = tuple(program(*input) for input in inputs)
 
-        # Calculate and return fitness.
-        return math.sqrt(mean_squared_error(target, estimated))
+            # Calculate and return fitness.
+            return math.sqrt(mean_squared_error(target, estimated))
+        except ValueError:
+            return float("inf")
 
     # Calculate fitness scores for the set of trees in parallel, by way 
     # of the `pathos.pools` module. Note that this module is utilized 
@@ -723,11 +733,11 @@ def evaluate(primitive_set, trees, inputs, target):
     # CPU cores are utilized by default. To utilize a different amount, 
     # specify the `nodes` attribute via the `ProcessPool` constructor.
     # This property can also be printed out, if need be.)
-    # fitness = ProcessPool().map(evaluate_, trees)
+    fitness = ProcessPool().map(evaluate_, trees)
 
-    fitness = []
-    for tree in trees:
-        fitness.append(evaluate_(tree))
+    # fitness = []
+    # for tree in trees:
+    #     fitness.append(evaluate_(tree))
 
     return fitness
 
@@ -737,7 +747,6 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
-# num_fitness_cases = (10,)
 num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Random fitness case vector for maximum amount of fitness cases.
@@ -771,6 +780,9 @@ number = 1
 # for each number of fitness cases, for each function set.
 med_avg_runtimes = []
 
+# Fitness outputs.
+fitnesses = []
+
 for name, (function_set, max_depth, bin_size) in function_sets.items():
     # For each function set...
     print(f'Function set `{name}`:')
@@ -796,11 +808,13 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
     # Prepare for statistics relevant to function set.
     # sizes.append([])
     med_avg_runtimes.append([])
+    fitnesses.append([])
 
     # For each amount of fitness cases, and for each size bin, 
     # calculate the relevant statistics.
 
     for nfc in num_fitness_cases:
+    # for nfc in (10,):
         # For each number of fitness cases...
         print(f'Number of fitness cases: `{nfc}`')
 
@@ -813,6 +827,7 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
         # Prepare for statistics relevant to the 
         # numbers of fitness cases and size bins.
         med_avg_runtimes[-1].append([[] for _ in range(num_size_bins)])
+        fitnesses[-1].append([[] for _ in range(num_size_bins)])
 
         for i in range(num_size_bins):
             # For each size bin...
@@ -820,6 +835,10 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
             # `PrimitiveTree` objects for size bin `i`.
             trees = tuple(primitive_trees[name][i])
+
+            # Calculate and append fitness values for current size bin.
+            fitnesses[-1][-1][i] = evaluate(
+                primitive_set, trees, inputs, target)
 
             for _ in range(num_epochs):
                 # For each epoch...
@@ -841,7 +860,8 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
                     np.median(avg_runtimes))
 
 # Preserve results.
+results = [fitnesses, med_avg_runtimes]
 with open(f'{root_dir}/../results_deap.pkl', 'wb') as f:
-    pickle.dump(med_avg_runtimes, f)
+    pickle.dump(results, f)
         
 

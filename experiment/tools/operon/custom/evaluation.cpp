@@ -233,7 +233,7 @@ namespace Test {
         std::string function_sets[NUM_FUNCTION_SETS] = { 
             "nicolau_a", "nicolau_b", "nicolau_c" };
 
-        int size_bins[NUM_FUNCTION_SETS] = { 32, 32, 32 };
+        int size_bins[NUM_FUNCTION_SETS] = { 32, 32, 31 };
 
         std::cout << "\n\nOperon build information: " << 
             Operon::Version() << "\n\n";

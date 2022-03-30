@@ -81,7 +81,7 @@ for name in names:
         constants.append(f.read().splitlines())
 
 # Tuples for maximum program size and 'size bin' size.
-sizes = ((255, 8), (63, 2), (63, 2))
+sizes = ((255, 8), (63, 2), (31, 1))
 
 # Numbers of fitness cases.
 num_fitness_cases = (10, 100, 1000, 10000, 100000)
@@ -110,7 +110,8 @@ inputs = np.array(inputs)
 target = np.array(target)
 
 # Retrieve and convert programs to various notations.
-for (name, ps), (max_size, bin_size) in zip(primitive_sets.items(), sizes):
+for ((m, (name, ps)), (max_size, bin_size)) in zip(
+    enumerate(primitive_sets.items()), sizes):
 
     # Number of variables.
     num_variables = len(ps.variable_terminals)
@@ -266,3 +267,91 @@ for (name, ps), (max_size, bin_size) in zip(primitive_sets.items(), sizes):
         f.write(f');\n\n')
 
         f.write(f'end package;')
+
+    ####################################################################
+
+    # Create C++ header file containing fitness outputs for each number 
+    # of fitness cases, for each function set.
+
+    # Fitness output results from DEAP.
+    with open(f'{root_dir}/../results_deap.pkl', 'rb') as f:
+        fitnesses, _ = pickle.load(f)
+
+    num_bins = int(math.ceil(max_size/bin_size))
+
+    for i, nfc in enumerate(num_fitness_cases):
+    # for i, nfc in enumerate(num_fitness_cases):
+
+        with open(f'{root_dir}/{name}/fitness_outputs/{nfc}.hpp', 'w+') as f:
+
+            f.write(f'#include <limits>\n\n')
+
+            f.write(f'float fitnesses[{num_bins}][{num_programs_per_bin}] = '
+                    f'{{\n')
+
+            for j in range(1, num_bins+1):
+                # Fitnesses for bin `i`.
+                f.write(f'  // Bin `{j}`...\n')
+                f.write(f'  {{\n')
+
+                for k in range(num_programs_per_bin):
+                    # Write fitness output.
+                    fitness = fitnesses[m][i][j-1][k]
+                    fitness = fitness if fitness != float('inf') else (
+                        'std::numeric_limits<float>::infinity()')
+                    f.write(f'    {fitness},\n')
+
+                f.write(f'  }}')
+
+                if j < num_bins:
+                    f.write(',\n\n')
+                else:
+                    f.write('\n')
+
+            f.write(f'}};\n\n')
+
+    ####################################################################
+
+    # Create C++ header file containing programs for each function set.
+
+    with open(f'{root_dir}/{name}/programs.hpp', 'w+') as f:
+
+        f.write(f'uint8_t programs[{num_bins}][{num_programs_per_bin}]'
+                f'[{max_size+1}] = {{\n')
+
+        for i in range(1, num_bins+1):
+            # Programs for bin `i`.
+            f.write(f'  // Bin `{i}`...\n')
+            f.write(f'  {{\n')
+
+            bin = programs[(i-1)*num_programs_per_bin:(i)*num_programs_per_bin]
+
+            # Write opcode data.
+            for j, program in enumerate(bin):
+                # For each program...
+                f.write(f'    // Program {j}...\n')
+                f.write(f'    {{\n')
+
+                for node in program.preorder:
+                    # For each node...
+                    f.write(f'      0x{ps.opcode(node, "X")},\n')
+
+                # Add null.
+                f.write(f'      0x00\n')
+                f.write(f'    }}')
+
+                if j < num_programs_per_bin - 1:
+                    f.write(',\n\n')
+                else:
+                    f.write('\n')
+                
+            f.write(f'  }}')
+
+            if i < num_bins:
+                f.write(',\n\n')
+            else:
+                f.write('\n')
+
+        f.write(f'}};\n\n')
+
+    ####################################################################

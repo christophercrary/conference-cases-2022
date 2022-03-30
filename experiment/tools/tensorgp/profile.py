@@ -92,7 +92,7 @@ functions = {'add', 'aq', 'exp', 'log', 'mul',
 function_sets = {
     'nicolau_a': (4, 2, 7, 8),
     'nicolau_b': (6, 2, 5, 2),
-    'nicolau_c': (9, 2, 5, 2)
+    'nicolau_c': (9, 2, 4, 1)
 }
 
 # Number of programs per size bin.
