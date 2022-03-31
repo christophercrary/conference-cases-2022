@@ -67,12 +67,14 @@ def tanh(x):
 
 
 # Primitive set names.
-names = ('nicolau_a', 'nicolau_b', 'nicolau_c')
+names = ('nicolau_c',)
+# names = ('nicolau_a', 'nicolau_b', 'nicolau_c')
 
 # Function sets.
-functions = ((add, sub, mul, aq),
-             (sin, tanh, add, sub, mul, aq),
-             (sin, tanh, exp, log, sqrt, add, sub, mul, aq))
+functions = ((sin, tanh, exp, log, sqrt, add, sub, mul, aq),)
+# functions = ((add, sub, mul, aq),
+#              (sin, tanh, add, sub, mul, aq),
+#              (sin, tanh, exp, log, sqrt, add, sub, mul, aq))
 
 # Constant sets.
 constants = []
@@ -81,10 +83,12 @@ for name in names:
         constants.append(f.read().splitlines())
 
 # Tuples for maximum program size and 'size bin' size.
-sizes = ((255, 8), (63, 2), (31, 1))
+sizes = ((31, 1),)
+# sizes = ((255, 8), (63, 2), (31, 1))
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000, 100000)
+num_fitness_cases = (10,)
+# num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Number of programs per size bin.
 num_programs_per_bin = 128
@@ -125,13 +129,13 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
     ####################################################################
 
-    # Convert to Operon strings.
-    programs_ = [p.inorder_str for p in programs]
+    # # Convert to Operon strings.
+    # programs_ = [p.inorder_str for p in programs]
 
-    # Write Operon programs.
-    with open(f'{root_dir}/{name}/programs_operon.txt', 'w+') as f:
-        for p in programs_:
-            f.write(f'{p}\n')
+    # # Write Operon programs.
+    # with open(f'{root_dir}/{name}/programs_operon.txt', 'w+') as f:
+    #     for p in programs_:
+    #         f.write(f'{p}\n')
 
     # Write Operon fitness cases.
     for nfc in num_fitness_cases:
@@ -146,127 +150,127 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
     ####################################################################
 
-    # Convert to TensorGP strings.
-    programs_ = [p.tensorgp_str(ps) for p in programs]
+    # # Convert to TensorGP strings.
+    # programs_ = [p.tensorgp_str(ps) for p in programs]
 
-    # Write TensorGP programs.
-    with open(f'{root_dir}/{name}/programs_tensorgp.txt', 'w+') as f:
-        for p in programs_:
-            f.write(f'{p}\n')
-
-    ####################################################################
-
-    # For each size bin, convert `num_programs_per_bin` programs to 
-    # the relevant assembly language.
-
-    # Maximum number of program memory locations.
-    # An extra memory location is given for 'null' separators.
-    depth = (max_size+1)*num_programs_per_bin
-
-    # Address and data widths for assembly language, base 16.
-    addr_width = int(math.ceil(math.log(depth, 16)))
-    data_width = int(math.ceil(math.log(len(ps.assembly_language), 16)))
-
-    for i in range(1, int(math.ceil(max_size/bin_size))+1):
-        # Programs for bin `i`.
-        bin = programs[(i-1)*num_programs_per_bin:(i)*num_programs_per_bin]
-        with open(
-            f'{root_dir}/{name}/mif/programs_bin{i}.mif', 'w+') as f:
-            # Write MIF header.
-            f.write(f'DEPTH = {depth};\n')
-            f.write(f'WIDTH = {data_width};\n')
-            f.write(f'ADDRESS RADIX = HEX;\n')
-            f.write(f'DATA RADIX = HEX;\n')
-            f.write(f'CONTENT\n')
-            f.write(f'BEGIN\n\n')
-
-            # Write MIF data.
-            for j, program in enumerate(bin):
-                # For each program...
-                for k, node in enumerate(program.preorder + ('null',)):
-                    # For each node...
-                    addr = j * (max_size+1) + k
-                    f.write(f'{addr:0{addr_width}X} : '
-                            f'{ps.opcode(node, "X")};\n')
-                if k < max_size:
-                    # The current program did not utilize all 
-                    # of its allocated memory; initialize the 
-                    # remainder of the relevant program memory 
-                    # locations to zero.
-                    addrl = j * (max_size+1) + (k+1)
-                    addrh = (j+1) * max_size + 1
-                    f.write(f'[{addrl:0{addr_width}X}..'
-                            f'{addrh:0{addr_width}X}] : '
-                            f'{0:0{data_width}X};\n')
-            f.write(f'\nEND;')
+    # # Write TensorGP programs.
+    # with open(f'{root_dir}/{name}/programs_tensorgp.txt', 'w+') as f:
+    #     for p in programs_:
+    #         f.write(f'{p}\n')
 
     ####################################################################
 
-    # For each size bin, convert `num_programs_per_bin` programs to 
-    # the relevant assembly language (tuple).
+    # # For each size bin, convert `num_programs_per_bin` programs to 
+    # # the relevant assembly language.
 
-    # Maximum number of program memory locations.
-    # An extra memory location is given for 'null' separators.
-    depth = (max_size+1)*num_programs_per_bin
+    # # Maximum number of program memory locations.
+    # # An extra memory location is given for 'null' separators.
+    # depth = (max_size+1)*num_programs_per_bin
 
-    # Address and data widths for assembly language, base 8.
-    addr_width = int(math.ceil(math.log(depth, 16)))
-    data_width = int(math.ceil(math.log(len(ps.assembly_language), 16)))
-    opcode_width = int(math.ceil(math.log(len(ps.assembly_language), 2)))
+    # # Address and data widths for assembly language, base 16.
+    # addr_width = int(math.ceil(math.log(depth, 16)))
+    # data_width = int(math.ceil(math.log(len(ps.assembly_language), 16)))
 
-    num_bins = int(math.ceil(max_size/bin_size))
+    # for i in range(1, int(math.ceil(max_size/bin_size))+1):
+    #     # Programs for bin `i`.
+    #     bin = programs[(i-1)*num_programs_per_bin:(i)*num_programs_per_bin]
+    #     with open(
+    #         f'{root_dir}/{name}/mif/programs_bin{i}.mif', 'w+') as f:
+    #         # Write MIF header.
+    #         f.write(f'DEPTH = {depth};\n')
+    #         f.write(f'WIDTH = {data_width};\n')
+    #         f.write(f'ADDRESS RADIX = HEX;\n')
+    #         f.write(f'DATA RADIX = HEX;\n')
+    #         f.write(f'CONTENT\n')
+    #         f.write(f'BEGIN\n\n')
 
-    with open(f'{root_dir}/{name}/programs_tuples_pkg.vhd', 'w+') as f:
+    #         # Write MIF data.
+    #         for j, program in enumerate(bin):
+    #             # For each program...
+    #             for k, node in enumerate(program.preorder + ('null',)):
+    #                 # For each node...
+    #                 addr = j * (max_size+1) + k
+    #                 f.write(f'{addr:0{addr_width}X} : '
+    #                         f'{ps.opcode(node, "X")};\n')
+    #             if k < max_size:
+    #                 # The current program did not utilize all 
+    #                 # of its allocated memory; initialize the 
+    #                 # remainder of the relevant program memory 
+    #                 # locations to zero.
+    #                 addrl = j * (max_size+1) + (k+1)
+    #                 addrh = (j+1) * max_size + 1
+    #                 f.write(f'[{addrl:0{addr_width}X}..'
+    #                         f'{addrh:0{addr_width}X}] : '
+    #                         f'{0:0{data_width}X};\n')
+    #         f.write(f'\nEND;')
 
-        # Write package header.
-        f.write(f'library gp;\n')
-        f.write(f'context gp.std_context;\n\n')
-        f.write(f'package programs_tuples_{name}_pkg is \n\n')
+    ####################################################################
 
-        f.write(f'  constant opcode_type : type_t := '
-                f'uint_type({opcode_width});\n')
-        f.write(f'  constant opcode_width : positive := '
-                f'get_width(opcode_type);\n\n')
-        f.write(f'  constant programs : tuple_array(0 to {num_bins-1})'
-            f'(0 to {depth-1})({opcode_width-1} downto 0) := (\n')
+    # # For each size bin, convert `num_programs_per_bin` programs to 
+    # # the relevant assembly language (tuple).
 
-        for i in range(1, num_bins+1):
-            # Programs for bin `i`.
-            f.write(f'    -- Bin `{i}`...\n')
-            f.write(f'    {i-1} => (\n')
-            bin = programs[(i-1)*num_programs_per_bin:(i)*num_programs_per_bin]
+    # # Maximum number of program memory locations.
+    # # An extra memory location is given for 'null' separators.
+    # depth = (max_size+1)*num_programs_per_bin
 
-            # Write tuple data.
-            for j, program in enumerate(bin):
-                # For each program...
-                f.write(f'      -- Program {j}...\n')
-                for k, node in enumerate(program.preorder):
-                    # For each node...
-                    addr = j * (max_size+1) + k
-                    f.write(f'      {addr} => '
-                            f'to_slv(opcode_type, '
-                            f'16#{ps.opcode(node, "X")}#),\n')
+    # # Address and data widths for assembly language, base 8.
+    # addr_width = int(math.ceil(math.log(depth, 16)))
+    # data_width = int(math.ceil(math.log(len(ps.assembly_language), 16)))
+    # opcode_width = int(math.ceil(math.log(len(ps.assembly_language), 2)))
 
-                # Add null.
-                addrl = j * (max_size+1) + (k+1)
-                addrh = (j+1) * (max_size + 1) - 1
-                f.write(f'      {addrl} to {addrh} => '
-                        f"(others => '0')")
-                if j < num_programs_per_bin - 1:
-                    f.write(',\n\n')
-                else:
-                    f.write('\n')
+    # num_bins = int(math.ceil(max_size/bin_size))
+
+    # with open(f'{root_dir}/{name}/programs_tuples_pkg.vhd', 'w+') as f:
+
+    #     # Write package header.
+    #     f.write(f'library gp;\n')
+    #     f.write(f'context gp.std_context;\n\n')
+    #     f.write(f'package programs_tuples_{name}_pkg is \n\n')
+
+    #     f.write(f'  constant opcode_type : type_t := '
+    #             f'uint_type({opcode_width});\n')
+    #     f.write(f'  constant opcode_width : positive := '
+    #             f'get_width(opcode_type);\n\n')
+    #     f.write(f'  constant programs : tuple_array(0 to {num_bins-1})'
+    #         f'(0 to {depth-1})({opcode_width-1} downto 0) := (\n')
+
+    #     for i in range(1, num_bins+1):
+    #         # Programs for bin `i`.
+    #         f.write(f'    -- Bin `{i}`...\n')
+    #         f.write(f'    {i-1} => (\n')
+    #         bin = programs[(i-1)*num_programs_per_bin:(i)*num_programs_per_bin]
+
+    #         # Write tuple data.
+    #         for j, program in enumerate(bin):
+    #             # For each program...
+    #             f.write(f'      -- Program {j}...\n')
+    #             for k, node in enumerate(program.preorder):
+    #                 # For each node...
+    #                 addr = j * (max_size+1) + k
+    #                 f.write(f'      {addr} => '
+    #                         f'to_slv(opcode_type, '
+    #                         f'16#{ps.opcode(node, "X")}#),\n')
+
+    #             # Add null.
+    #             addrl = j * (max_size+1) + (k+1)
+    #             addrh = (j+1) * (max_size + 1) - 1
+    #             f.write(f'      {addrl} to {addrh} => '
+    #                     f"(others => '0')")
+    #             if j < num_programs_per_bin - 1:
+    #                 f.write(',\n\n')
+    #             else:
+    #                 f.write('\n')
                 
-            f.write('  )')
+    #         f.write('  )')
 
-            if i < num_bins:
-                f.write(',\n\n')
-            else:
-                f.write('\n')
+    #         if i < num_bins:
+    #             f.write(',\n\n')
+    #         else:
+    #             f.write('\n')
 
-        f.write(f');\n\n')
+    #     f.write(f');\n\n')
 
-        f.write(f'end package;')
+    #     f.write(f'end package;')
 
     ####################################################################
 
@@ -286,7 +290,7 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
             f.write(f'#include <limits>\n\n')
 
-            f.write(f'float fitnesses[{num_bins}][{num_programs_per_bin}] = '
+            f.write(f'float fitnesses_{name}_{nfc}[{num_bins}][{num_programs_per_bin}] = '
                     f'{{\n')
 
             for j in range(1, num_bins+1):
@@ -296,7 +300,7 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
                 for k in range(num_programs_per_bin):
                     # Write fitness output.
-                    fitness = fitnesses[m][i][j-1][k]
+                    fitness = np.single(fitnesses[m][i][j-1][k])
                     fitness = fitness if fitness != float('inf') else (
                         'std::numeric_limits<float>::infinity()')
                     f.write(f'    {fitness},\n')
@@ -316,7 +320,7 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
     with open(f'{root_dir}/{name}/programs.hpp', 'w+') as f:
 
-        f.write(f'uint8_t programs[{num_bins}][{num_programs_per_bin}]'
+        f.write(f'uint8_t programs_{name}[{num_bins}][{num_programs_per_bin}]'
                 f'[{max_size+1}] = {{\n')
 
         for i in range(1, num_bins+1):

@@ -19,7 +19,8 @@ root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../../results/'
             f'programs')
 
 # Seed the relevant random number generator, for reproducibility.
-random.seed(37)
+# random.seed(37)
+random.seed(100000)
 
 ########################################################################
 # Some helper functions.
@@ -34,7 +35,7 @@ def get_max_size(m, d):
     return int((1-m**(d+1))/(1-m))
 
 def generate_primitive_set(
-    function_set, num_variables, num_constants, erc_name):
+    function_set, num_variables, num_constants, erc_name, constants):
     """Return tuple containing (i) the primitive set based on 
     the given function set (`function_set`), number of terminal 
     variables (`num_variables`), and number of terminal constants
@@ -48,10 +49,12 @@ def generate_primitive_set(
         primitive_set.addPrimitive(op, arity)
 
     # Create a list of fixed ephemeral random constants.
-    ephemeral_constants = []
-    for i in range(num_constants):
-        ephemeral_constants.append(random.uniform(1,2))
-    
+    # ephemeral_constants = []
+    # for i in range(num_constants):
+    #     ephemeral_constants.append(random.uniform(1,2))
+
+    ephemeral_constants = constants
+
     # Add an ephemeral constant to the DEAP primitive set that
     # returns a random value from the `ephemeral_constants` list 
     # of random constants. This is done so that there can only
@@ -125,7 +128,8 @@ def generate_program_(primitive_set, min_depth, max_depth, min_size,
             # Valid functions for the current node, 
             # based on function arity.
             valid_functions = [f for f in primitive_set.primitives[ret_type] 
-                if size+f.arity <= max_size]
+                if size+f.arity <= max_size and not (f.name == 'sqrt' or f.name == 'log')]
+                # if size+f.arity <= max_size and not (f.name == 'exp' or f.name == 'sqrt' or f.name == 'log')]
 
             if valid_functions != [] and desired_trait == 'size':
                 # Determine the subset of valid functions that are also
@@ -198,7 +202,8 @@ def generate_grow(primitive_set, min_depth, max_depth, min_size, max_size,
 
         # List of valid functions for the current node.
         valid_functions = [f for f in primitive_set.primitives[ret_type] 
-            if size+f.arity <= max_size]
+            if size+f.arity <= max_size and not (f.name == 'sqrt' or f.name == 'log')]
+            # if size+f.arity <= max_size and not (f.name == 'exp' or f.name == 'sqrt' or f.name == 'log')]
 
         # Maximum function arity for the set of functions that
         # are valid for the current node.
@@ -436,8 +441,8 @@ opcode_width = 8
 
 # Function sets.
 function_sets = {
-    'nicolau_a': (nicolau_a, 7, 8),
-    'nicolau_b': (nicolau_b, 5, 2),
+    # 'nicolau_a': (nicolau_a, 7, 8),
+    # 'nicolau_b': (nicolau_b, 5, 2),
     'nicolau_c': (nicolau_c, 4, 1)
 }
 
@@ -502,17 +507,25 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
     # Desired "generation trait" for random programs.
     desired_trait = 'size'
 
+    with open(f'{root_dir}/{name}/constants.txt', 'r') as f:
+        constants_str = f.read().splitlines()
+
+    constants = []
+
+    for constant_str in constants_str:
+        constants.append(float(constant_str))
+
     # Primitive set and list of (name strings for) constants.
     primitive_set, constant_names = generate_primitive_set(
-        function_set, num_variables, num_constants, 'erc_'+name)
+        function_set, num_variables, num_constants, 'erc_'+name, constants)
 
     primitive_sets[name] = primitive_set
 
     # Preserve random constants.
-    with open(
-        f'{root_dir}/{name}/constants.txt', 'w') as f:
-        for constant in constant_names:
-            f.write(f'{constant}\n')
+    # with open(
+    #     f'{root_dir}/{name}/constants.txt', 'w') as f:
+    #     for constant in constant_names:
+    #         f.write(f'{constant}\n')
 
     # print('Opcode width: ', opcode_width)
     # print('Function set: ', function_set)
@@ -557,18 +570,25 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
             nodes, edges, labels = gp.graph(program)
 
-            # if (i == 1 and j == 10):
-            #     # Graphviz representation of particular program.
-            #     g = pgv.AGraph()
-            #     g.add_nodes_from(nodes)
-            #     g.add_edges_from(edges)
-            #     g.layout(prog='dot')
+            # Programs of interest (POI).
+            poi = (('nicolau_c', 6, 93),)
 
-            #     for i in nodes:
-            #         n = g.get_node(i)
-            #         n.attr["label"] = labels[i]
+            for name_, i_, j_ in poi:
+                if (name == name_) and (i == i_) and (j == j_):
+                    # Print graphical representation of specified program.
+                    g = pgv.AGraph()
+                    g.add_nodes_from(nodes)
+                    g.add_edges_from(edges)
+                    g.layout(prog='dot')
 
-            #     g.draw(f'{root_dir}/../graphics/tree.pdf')
+
+
+                    for i_ in nodes:
+                        n = g.get_node(i_)
+                        n.attr["label"] = labels[i_]
+
+                        g.draw(f'{root_dir}/../graphics/tree_'
+                            f'{name}_bin_{i}_program_{j}.pdf')
 
             # Size of program.
             size = nodes[-1]+1
@@ -747,7 +767,8 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
-num_fitness_cases = (10, 100, 1000, 10000, 100000)
+num_fitness_cases = (10,)
+# num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Random fitness case vector for maximum amount of fitness cases.
 inputs_ = np.array(
