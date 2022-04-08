@@ -557,18 +557,30 @@ for name, (function_set, max_depth, bin_size) in function_sets.items():
 
             nodes, edges, labels = gp.graph(program)
 
-            # if (i == 1 and j == 10):
-            #     # Graphviz representation of particular program.
-            #     g = pgv.AGraph()
-            #     g.add_nodes_from(nodes)
-            #     g.add_edges_from(edges)
-            #     g.layout(prog='dot')
+            # Programs of interest (POI).
+            # poi = (('nicolau_c', 5, 63), ('nicolau_c', 9, 60), 
+            #        ('nicolau_c', 10, 18), ('nicolau_c', 11, 111),
+            #        ('nicolau_c', 13, 18), ('nicolau_c', 14, 1), 
+            #        ('nicolau_c', 16, 73), ('nicolau_c', 17, 69), 
+            #        ('nicolau_c', 18, 96), ('nicolau_c', 19, 70), 
+            #        ('nicolau_c', 19, 87), ('nicolau_c', 20, 64), 
+            #        ('nicolau_c', 21, 16), ('nicolau_c', 21, 51),
+            #        ('nicolau_c', 27, 72))
+            
+            # for name_, i_, j_ in poi:
+            #     if (name == name_) and (i == i_) and (j == j_):
+            #         # Print graphical representation of specified program.
+            #         g = pgv.AGraph()
+            #         g.add_nodes_from(nodes)
+            #         g.add_edges_from(edges)
+            #         g.layout(prog='dot')
 
-            #     for i in nodes:
-            #         n = g.get_node(i)
-            #         n.attr["label"] = labels[i]
+            #         for i_ in nodes:
+            #             n = g.get_node(i_)
+            #             n.attr["label"] = labels[i_]
 
-            #     g.draw(f'{root_dir}/../graphics/tree.pdf')
+            #         g.draw(f'{root_dir}/../graphics/tree_'
+            #                f'{name}_bin_{i}_program_{j}.pdf')
 
             # Size of program.
             size = nodes[-1]+1
