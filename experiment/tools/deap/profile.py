@@ -15,8 +15,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 
 # Useful directory path.
-root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../../results/'
-            f'programs')
+
+
 
 # Seed the relevant random number generator, for reproducibility.
 random.seed(37)
