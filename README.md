@@ -7,7 +7,7 @@ are *not* included when profiling——only mechanisms for calculating
 This repository was originally created for the paper 
 "Work-in-Progress: Toward a Robust, Reconfigurable Hardware
 Accelerator for Tree-Based Genetic Programming," by Crary et al., 
-which compared the evaluation performance of an initial FPGA-based GP hardware accelerator with that of the GP software tools *DEAP*, *TensorGP*, and *Operon*.
+which compared the evaluation performance of an initial FPGA-based GP hardware accelerator with that of the GP software tools *DEAP* (version 1.3), *TensorGP* (Git revision d75fb6), and *Operon* (Git revision 9e7ee4).
 
 ## Included Tools
 
