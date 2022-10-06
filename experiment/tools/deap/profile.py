@@ -18,9 +18,11 @@ from sklearn.metrics import mean_squared_error, r2_score
 root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../../results/'
             f'programs')
 
+np.seterr(all='ignore')
+
 # Seed the relevant random number generator, for reproducibility.
-# random.seed(37)
-random.seed(100000)
+random.seed(37)
+# random.seed(100000)
 
 ########################################################################
 # Some helper functions.
@@ -128,7 +130,8 @@ def generate_program_(primitive_set, min_depth, max_depth, min_size,
             # Valid functions for the current node, 
             # based on function arity.
             valid_functions = [f for f in primitive_set.primitives[ret_type] 
-                if size+f.arity <= max_size and not (f.name == 'sqrt' or f.name == 'log')]
+                if size+f.arity <= max_size]
+                # if size+f.arity <= max_size and not (f.name == 'aq' or f.name == 'sub' or f.name == 'mul' or f.name == 'log' or f.name == 'tanh' or f.name == 'sin' or f.name == 'sqrt')]
                 # if size+f.arity <= max_size and not (f.name == 'exp' or f.name == 'sqrt' or f.name == 'log')]
 
             if valid_functions != [] and desired_trait == 'size':
@@ -202,7 +205,8 @@ def generate_grow(primitive_set, min_depth, max_depth, min_size, max_size,
 
         # List of valid functions for the current node.
         valid_functions = [f for f in primitive_set.primitives[ret_type] 
-            if size+f.arity <= max_size and not (f.name == 'sqrt' or f.name == 'log')]
+            if size+f.arity <= max_size]
+            # if size+f.arity <= max_size and not (f.name == 'aq' or f.name == 'sub' or f.name == 'mul' or f.name == 'log' or f.name == 'tanh' or f.name == 'sin' or f.name == 'sqrt')]
             # if size+f.arity <= max_size and not (f.name == 'exp' or f.name == 'sqrt' or f.name == 'log')]
 
         # Maximum function arity for the set of functions that
@@ -367,7 +371,7 @@ def generate_program(gen_strategy, primitive_set, min_depth, max_depth,
 
 def add(x1, x2):
     """Return result of addition."""
-    return x1 + x2
+    return np.add(x1, x2)
 
 def aq(x1, x2):
     """Return result of analytical quotient.
@@ -376,45 +380,46 @@ def aq(x1, x2):
     'The use of an analytic quotient operator in genetic programming':  
     `aq(x1, x2) = (x1)/(sqrt(1+x2^(2)))`.
     """
-    return (x1) / (math.sqrt(1 + x2 ** (2)))
+    return np.divide(x1, np.sqrt(np.add(1, np.square(x2))))
+    # return (x1) / (math.sqrt(1 + x2 ** (2)))
 
 def exp(x): 
     """Return result of exponentiation, base `e`."""
     try:
-        return math.exp(x)
+        return np.exp(x)
     except OverflowError:
         return float("inf")
 
 def log(x):
     """Return result of protected logarithm, base `e`."""
     if x != 0:
-        return math.log(abs(x))
+        return np.log(np.absolute(x))
     else:
         return 0
 
 def mul(x1, x2):
     """Return result of multiplication."""
-    return x1 * x2
+    return np.multiply(x1, x2)
 
 def sin(x):
     """Return result of sine."""
-    return math.sin(x)
+    return np.sin(x)
 
 def sqrt(x):
     """Return result of protected square root."""
     try:
-        return math.sqrt(x)
+        return np.sqrt(x)
     except ValueError:
         # Input is negative.
         return 0
 
 def sub(x1, x2):
     """Return result of subtraction."""
-    return x1 - x2
+    return np.subtract(x1, x2)
 
 def tanh(x):
     """Return result of hyperbolic tangent."""
-    return math.tanh(x)
+    return np.tanh(x)
 
 
 ########################################################################
@@ -441,8 +446,8 @@ opcode_width = 8
 
 # Function sets.
 function_sets = {
-    # 'nicolau_a': (nicolau_a, 7, 8),
-    # 'nicolau_b': (nicolau_b, 5, 2),
+    'nicolau_a': (nicolau_a, 7, 8),
+    'nicolau_b': (nicolau_b, 5, 2),
     'nicolau_c': (nicolau_c, 4, 1)
 }
 
@@ -739,10 +744,11 @@ def evaluate(primitive_set, trees, inputs, target):
             program = gp.compile(tree, primitive_set)
 
             # Calculate program outputs, i.e., estimations of target vector.
-            estimated = tuple(program(*input) for input in inputs)
+            estimated = tuple(program(*input) for input in np.float32(inputs))
 
             # Calculate and return fitness.
-            return math.sqrt(mean_squared_error(target, estimated))
+            return mean_squared_error(np.float32(target), np.float32(estimated), squared=False)
+            # return np.sqrt(mean_squared_error(np.float32(target), np.float32(estimated)))
         except ValueError:
             return float("inf")
 
@@ -767,7 +773,9 @@ max_num_variables = max([len(function_set)-1
     for (function_set, *_) in function_sets.items()])
 
 # Numbers of fitness cases.
-num_fitness_cases = (10,)
+# num_fitness_cases = (100000,)
+num_fitness_cases = (100, 10000)
+# num_fitness_cases = (10, 1000, 100000)
 # num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Random fitness case vector for maximum amount of fitness cases.

@@ -19,7 +19,8 @@ root_dir = (f'{os.path.dirname(os.path.abspath(__file__))}/../../results/'
 
 def add(x1, x2):
     """Return result of addition."""
-    return x1 + x2
+    return np.add(x1, x2)
+    # return x1 + x2
 
 def aq(x1, x2):
     """Return result of analytical quotient.
@@ -28,53 +29,63 @@ def aq(x1, x2):
     'The use of an analytic quotient operator in genetic programming':  
     `aq(x1, x2) = (x1)/(sqrt(1+x2^(2)))`.
     """
-    return (x1) / (math.sqrt(1 + x2 ** (2)))
+    return np.divide(x1, np.sqrt(np.add(1, np.square(x2))))
+    # return (x1) / (math.sqrt(1 + x2 ** (2)))
 
 def exp(x): 
     """Return result of exponentiation, base `e`."""
-    return math.exp(x)
+    return np.exp(x)
+    # return math.exp(x)
 
 def log(x):
     """Return result of protected logarithm, base `e`."""
     if x != 0:
-        return math.log(abs(x))
+        return np.log(np.absolute(x))
+        # return math.log(abs(x))
     else:
         return 0
 
 def mul(x1, x2):
     """Return result of multiplication."""
-    return x1 * x2
+    return np.multiply(x1, x2)
+    # return x1 * x2
 
 def sin(x):
     """Return result of sine."""
-    return math.sin(x)
+    return np.sin(x)
+    # return math.sin(x)
 
 def sqrt(x):
     """Return result of protected square root."""
     try:
-        return math.sqrt(x)
+        return np.sqrt(x)
+        # return math.sqrt(x)
     except ValueError:
         # Input is negative.
         return 0
 
 def sub(x1, x2):
     """Return result of subtraction."""
-    return x1 - x2
+    return np.subtract(x1, x2)
+    # return x1 - x2
 
 def tanh(x):
     """Return result of hyperbolic tangent."""
-    return math.tanh(x)
+    return np.tanh(x)
+    # return math.tanh(x)
 
 
 # Primitive set names.
-names = ('nicolau_c',)
-# names = ('nicolau_a', 'nicolau_b', 'nicolau_c')
+# names = ('nicolau_a',)
+# names = ('nicolau_c',)
+names = ('nicolau_a', 'nicolau_b', 'nicolau_c')
 
 # Function sets.
-functions = ((sin, tanh, exp, log, sqrt, add, sub, mul, aq),)
-# functions = ((add, sub, mul, aq),
-#              (sin, tanh, add, sub, mul, aq),
-#              (sin, tanh, exp, log, sqrt, add, sub, mul, aq))
+# functions = ((add, sub, mul, aq),)
+# functions = ((sin, tanh, exp, log, sqrt, add, sub, mul, aq),)
+functions = ((add, sub, mul, aq),
+             (sin, tanh, add, sub, mul, aq),
+             (sin, tanh, exp, log, sqrt, add, sub, mul, aq))
 
 # Constant sets.
 constants = []
@@ -83,11 +94,14 @@ for name in names:
         constants.append(f.read().splitlines())
 
 # Tuples for maximum program size and 'size bin' size.
-sizes = ((31, 1),)
-# sizes = ((255, 8), (63, 2), (31, 1))
+# sizes = ((255, 8),)
+# sizes = ((31, 1),)
+sizes = ((255, 8), (63, 2), (31, 1))
 
 # Numbers of fitness cases.
-num_fitness_cases = (10,)
+# num_fitness_cases = (100000,)
+num_fitness_cases = (100, 10000)
+# num_fitness_cases = (10, 1000, 100000)
 # num_fitness_cases = (10, 100, 1000, 10000, 100000)
 
 # Number of programs per size bin.
@@ -320,7 +334,7 @@ for ((m, (name, ps)), (max_size, bin_size)) in zip(
 
     with open(f'{root_dir}/{name}/programs.hpp', 'w+') as f:
 
-        f.write(f'uint8_t programs_{name}[{num_bins}][{num_programs_per_bin}]'
+        f.write(f'const uint8_t programs_{name}[{num_bins}][{num_programs_per_bin}]'
                 f'[{max_size+1}] = {{\n')
 
         for i in range(1, num_bins+1):
