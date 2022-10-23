@@ -41,7 +41,7 @@ After the `run.sh` script fully executes, to view some relevant statistics, run 
 
 ## Installation instructions
 
-The following has been verified via Ubuntu 20.04 and CentOS 7. It is likely that other Linux distributions are supported, and it is plausible that Windows operating systems are supported, but it is unlikely that MacOS is readily supported.
+The following has been verified via Ubuntu 20.04 and CentOS 7. It is likely that other Linux distributions are supported, but it is unlikely that Windows and MacOS operating systems are readily supported.
 
 ### Prerequisites
 - Ensure that some Conda package management system 
