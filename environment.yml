@@ -1,4 +1,4 @@
-name: gp-eval-profile
+name: conference-cases-2022
 channels:
   - conda-forge
   - defaults

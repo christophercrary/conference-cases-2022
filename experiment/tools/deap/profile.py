@@ -3,7 +3,7 @@ from inspect import isclass
 import math
 import os
 import pickle
-import pygraphviz as pgv
+# import pygraphviz as pgv
 import random
 import sys
 import timeit
@@ -15,7 +15,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 
 
 # Useful directory path.
-
+root_dir = f'{os.getcwd()}/../results/programs'
 
 
 # Seed the relevant random number generator, for reproducibility.

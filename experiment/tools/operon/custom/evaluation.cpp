@@ -149,8 +149,8 @@ namespace Test {
             
             const int max_fc_factor = 5;
             int fc_factor = (int)(log10((double)(range.Size())));
-            std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
-            std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
+            // std::cout << "\n`range.Size()`: " << range.Size() << std::endl;
+            // std::cout << "\n`fc_factor`: " << fc_factor << std::endl;
 
             int num_generations = NB_NUM_GENERATIONS;
             int num_epochs = NB_NUM_EPOCHS;

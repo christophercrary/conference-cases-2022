@@ -56,6 +56,6 @@ within the shell:
 
 ```
 conda env create -f environment.yml
-conda activate gp-eval-profile
+conda activate conference-cases-2022
 bash install.sh
 ```
