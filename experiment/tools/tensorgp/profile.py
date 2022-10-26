@@ -82,6 +82,7 @@ def r2(**kwargs):
 debug = 0
 
 # Computing devices to utilize.
+# devices = ('/gpu:0', )
 devices = ('/cpu:0', '/gpu:0')
 
 # Overall set of functions.
